@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
 
 export default class Level3Scene extends Phaser.Scene {
     constructor() {
@@ -7,11 +8,12 @@ export default class Level3Scene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet("chicken", "assets/chicken.png", {
-            frameWidth: 256,
-            frameHeight: 512
+            frameWidth: 179,
+            frameHeight: 150
         })
 
         this.load.image("egg", "assets/egg.png")
+        this.load.audio("winSound", "assets/win.mp3")
     }
 
     create() {
@@ -42,21 +44,7 @@ export default class Level3Scene extends Phaser.Scene {
         // Court line
         this.add.rectangle(500, 540, 1000, 4, 0xffffff)
 
-        // Hoop stand
-        this.add.rectangle(860, 390, 20, 220, 0x444444)
-
-        // Visual backboard
-        this.add.rectangle(855, 260, 14, 90, 0xffffff)
-
-        // Visual rim
-        this.add.rectangle(800, 320, 60, 4, 0xff6600)
-
-        // Net visuals
-        this.add.line(780, 335, 0, 0, -12, 30, 0xffffff).setLineWidth(2, 2)
-        this.add.line(790, 335, 0, 0, -6, 30, 0xffffff).setLineWidth(2, 2)
-        this.add.line(800, 335, 0, 0, 0, 30, 0xffffff).setLineWidth(2, 2)
-        this.add.line(810, 335, 0, 0, 6, 30, 0xffffff).setLineWidth(2, 2)
-        this.add.line(820, 335, 0, 0, 12, 30, 0xffffff).setLineWidth(2, 2)
+        addBasketballHoopVisual(this)
 
         // Backboard and rim colliders
         this.backboardCollider = this.add.rectangle(846, 260, 26, 110, 0xffffff, 0)
@@ -69,8 +57,8 @@ export default class Level3Scene extends Phaser.Scene {
         this.physics.add.existing(this.rimRightCollider, true)
 
         // Player
-        this.player = this.physics.add.sprite(120, 450, "chicken", 1)
-        this.player.setScale(0.25)
+        this.player = this.physics.add.sprite(120, 450, "chicken", 0)
+        this.player.setScale(0.85)
         this.player.setCollideWorldBounds(true)
         this.physics.add.collider(this.player, this.ground)
 
@@ -79,15 +67,15 @@ export default class Level3Scene extends Phaser.Scene {
 
         this.anims.create({
             key: "run3",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 1, end: 4 }),
+            frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
             repeat: -1
         })
 
         this.anims.create({
             key: "flap3",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 4, end: 5 }),
-            frameRate: 10,
+            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
+            frameRate: 14,
             repeat: -1
         })
 
@@ -155,8 +143,11 @@ export default class Level3Scene extends Phaser.Scene {
         egg.destroy()
 
         if (this.score >= this.targetScore) {
-            this.time.delayedCall(1500, () => {
-                this.scene.start("MenuScene")
+            if (this.sound.get("winSound")) {
+                this.sound.play("winSound", { volume: 0.6 })
+            }
+            this.time.delayedCall(900, () => {
+                this.scene.start("Level3WinScene")
             })
         }
     }
@@ -190,11 +181,13 @@ export default class Level3Scene extends Phaser.Scene {
 
     update() {
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
+        const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
 
         // movement
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-220)
             this.player.setFlipX(true)
+            this.player.setAngle(0)
 
             if (onGround && (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "run3")) {
                 this.player.play("run3", true)
@@ -202,6 +195,7 @@ export default class Level3Scene extends Phaser.Scene {
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(220)
             this.player.setFlipX(false)
+            this.player.setAngle(0)
 
             if (onGround && (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "run3")) {
                 this.player.play("run3", true)
@@ -211,18 +205,24 @@ export default class Level3Scene extends Phaser.Scene {
 
             if (onGround) {
                 this.player.anims.stop()
-                this.player.setFrame(1)
+                this.player.setFrame(0)
+                this.player.setAngle(0)
             }
         }
 
         if (this.cursors.up.isDown && onGround) {
             this.player.setVelocityY(-420)
+            if (justJumped) {
+                this.player.setFrame(3)
+                this.player.setAngle(-10)
+                this.player.play("flap3", true)
+            }
         }
 
         if (!onGround) {
-            if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap3") {
-                this.player.play("flap3", true)
-            }
+            // Pose tilt to make jumping/falling readable.
+            this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
+            if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap3") this.player.play("flap3", true)
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.shootKey)) {

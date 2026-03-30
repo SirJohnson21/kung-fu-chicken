@@ -7,8 +7,8 @@ export default class WinScene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet("chicken", "assets/chicken.png", {
-            frameWidth: 256,
-            frameHeight: 512
+            frameWidth: 179,
+            frameHeight: 150
         })
 
         this.load.image("egg", "assets/egg.png")
@@ -33,12 +33,12 @@ export default class WinScene extends Phaser.Scene {
         })
 
         // Dancing chicken
-        this.chicken = this.add.sprite(500, 330, "chicken", 2)
-        this.chicken.setScale(0.35)
+        this.chicken = this.add.sprite(500, 330, "chicken", 1)
+        this.chicken.setScale(1.2)
 
         this.anims.create({
             key: "dance",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 1, end: 4 }),
+            frames: [0, 1, 2, 1].map((frame) => ({ key: "chicken", frame })),
             frameRate: 12,
             repeat: -1
         })

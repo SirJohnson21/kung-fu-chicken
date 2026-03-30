@@ -7,8 +7,8 @@ export default class Level2Scene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet("chicken", "assets/chicken.png", {
-            frameWidth: 256,
-            frameHeight: 512
+            frameWidth: 179,
+            frameHeight: 150
         })
 
         this.load.image("enemy", "assets/enemy.png")
@@ -48,8 +48,8 @@ export default class Level2Scene extends Phaser.Scene {
         this.add.rectangle(160, 420, 70, 40, 0x99ccff)
         this.add.rectangle(700, 420, 70, 40, 0x99ccff)
 
-        this.player = this.physics.add.sprite(100, 450, "chicken", 1)
-        this.player.setScale(0.25)
+        this.player = this.physics.add.sprite(100, 450, "chicken", 0)
+        this.player.setScale(0.85)
         this.player.setCollideWorldBounds(true)
 
         this.physics.add.collider(this.player, this.ground)
@@ -60,19 +60,31 @@ export default class Level2Scene extends Phaser.Scene {
 
         this.anims.create({
             key: "run2",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 1, end: 4 }),
+            frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
             repeat: -1
         })
 
         this.anims.create({
             key: "flap2",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 4, end: 5 }),
-            frameRate: 10,
+            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
+            frameRate: 14,
             repeat: -1
         })
 
-        this.player.setFrame(1)
+        this.anims.create({
+            key: "kick2",
+            // Short kick sequence using the last chicken frames.
+            frames: [
+                { key: "chicken", frame: 6 },
+                { key: "chicken", frame: 7 },
+                { key: "chicken", frame: 8 }
+            ],
+            frameRate: 20,
+            repeat: 0
+        })
+
+        this.player.setFrame(0)
         this.isKicking = false
 
         this.itemsCollected = 0
@@ -286,6 +298,7 @@ export default class Level2Scene extends Phaser.Scene {
 
     update() {
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
+        const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
 
         if (this.enemy.x >= 900) {
             this.enemy.body.setVelocityX(-this.enemySpeed)
@@ -298,8 +311,9 @@ export default class Level2Scene extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.attackKey)) {
             this.isKicking = true
             this.player.anims.stop()
-            this.player.setFrame(5)
             this.player.setVelocityX(0)
+            this.player.setAngle(this.player.flipX ? 18 : -18)
+            this.player.play("kick2", true)
 
             if (this.sound.get("kickSound")) {
                 this.sound.play("kickSound", { volume: 0.5 })
@@ -309,6 +323,11 @@ export default class Level2Scene extends Phaser.Scene {
 
             this.time.delayedCall(180, () => {
                 this.isKicking = false
+                this.player.setAngle(0)
+                if (this.player.body.blocked.down || this.player.body.touching.down) {
+                    this.player.anims.stop()
+                    this.player.setFrame(0)
+                }
             })
 
             return
@@ -318,6 +337,7 @@ export default class Level2Scene extends Phaser.Scene {
             if (this.cursors.left.isDown) {
                 this.player.setVelocityX(-220)
                 this.player.setFlipX(true)
+                this.player.setAngle(0)
 
                 if (onGround && (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "run2")) {
                     this.player.play("run2")
@@ -326,6 +346,7 @@ export default class Level2Scene extends Phaser.Scene {
             else if (this.cursors.right.isDown) {
                 this.player.setVelocityX(220)
                 this.player.setFlipX(false)
+                this.player.setAngle(0)
 
                 if (onGround && (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "run2")) {
                     this.player.play("run2")
@@ -336,18 +357,25 @@ export default class Level2Scene extends Phaser.Scene {
 
                 if (onGround) {
                     this.player.anims.stop()
-                    this.player.setFrame(1)
+                    this.player.setFrame(0)
+                    this.player.setAngle(0)
                 }
             }
 
             if (this.cursors.up.isDown && onGround) {
                 this.player.setVelocityY(-420)
+                if (justJumped) {
+                    // Make the jump look immediate instead of waiting a frame for airborne state.
+                    this.player.setFrame(3)
+                    this.player.setAngle(-10)
+                    this.player.play("flap2", true)
+                }
             }
 
             if (!onGround) {
-                if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap2") {
-                    this.player.play("flap2")
-                }
+                // Pose tilt to make jumping/falling readable.
+                this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
+                if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap2") this.player.play("flap2", true)
             }
         }
 

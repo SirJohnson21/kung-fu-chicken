@@ -17,7 +17,7 @@ export default class MenuScene extends Phaser.Scene {
         })
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("Level1Scene")
+            this.scene.start("LevelSelectScene")
         })
     }
 }
