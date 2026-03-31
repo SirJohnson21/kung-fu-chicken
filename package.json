@@ -5,6 +5,8 @@
   "main": "main.js",
   "scripts": {
     "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "generate-sounds": "node scripts/generate-sounds.js",
     "generate-enemies": "node scripts/generate-enemies.js",
     "process-level5-enemy": "node scripts/process-level5-enemy.js",
