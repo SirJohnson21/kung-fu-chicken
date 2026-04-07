@@ -36,7 +36,7 @@ export default class Level5Scene extends Phaser.Scene {
         this.physics.add.existing(this.ground, true)
 
         this.player = this.physics.add.sprite(500, 450, "chicken", 0)
-        this.player.setScale(0.85)
+        this.player.setScale(0.72)
         this.player.setCollideWorldBounds(true)
         this.physics.add.collider(this.player, this.ground)
 
@@ -129,30 +129,30 @@ export default class Level5Scene extends Phaser.Scene {
     }
 
     createHealthBar() {
-        const h = 12
-        const segW = 22
-        const gap = 3
+        const h = 8
+        const segW = 15
+        const gap = 2
         const totalW = 3 * segW + 2 * gap
         const bg = this.add
-            .rectangle(0, 8, totalW + 8, h + 4, 0x1a1530)
-            .setStrokeStyle(2, 0x9b7dff)
+            .rectangle(0, 5, totalW + 6, h + 3, 0x1a1530)
+            .setStrokeStyle(1, 0x9b7dff)
 
         this.healthSegments = []
         const startX = -totalW / 2 + segW / 2
         for (let i = 0; i < 3; i++) {
             const cx = startX + i * (segW + gap)
-            const seg = this.add.rectangle(cx, 8, segW, h, 0x4ade80)
+            const seg = this.add.rectangle(cx, 5, segW, h, 0x4ade80)
             this.healthSegments.push(seg)
         }
 
         this.playerNameLabel = this.add
-            .text(0, -8, "Cluck Norris", {
-                fontSize: "14px",
+            .text(0, -6, "Cluck Norris", {
+                fontSize: "10px",
                 color: "#e8dcff"
             })
             .setOrigin(0.5, 1)
 
-        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 92, [
+        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 78, [
             this.playerNameLabel,
             bg,
             ...this.healthSegments
@@ -315,7 +315,7 @@ export default class Level5Scene extends Phaser.Scene {
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
         if (this.healthBarContainer && this.player?.active) {
-            this.healthBarContainer.setPosition(this.player.x, this.player.y - 92)
+            this.healthBarContainer.setPosition(this.player.x, this.player.y - 78)
         }
 
         this.thoughts.getChildren().forEach((pot) => {

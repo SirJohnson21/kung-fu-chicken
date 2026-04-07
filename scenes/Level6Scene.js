@@ -153,30 +153,30 @@ export default class Level6Scene extends Phaser.Scene {
     }
 
     createHealthBar() {
-        const h = 12
-        const segW = 22
-        const gap = 3
+        const h = 8
+        const segW = 15
+        const gap = 2
         const totalW = 3 * segW + 2 * gap
         const bg = this.add
-            .rectangle(0, 8, totalW + 8, h + 4, 0x3d7cba)
-            .setStrokeStyle(2, 0xffffff)
+            .rectangle(0, 5, totalW + 6, h + 3, 0x3d7cba)
+            .setStrokeStyle(1, 0xffffff)
 
         this.healthSegments = []
         const startX = -totalW / 2 + segW / 2
         for (let i = 0; i < 3; i++) {
             const cx = startX + i * (segW + gap)
-            const seg = this.add.rectangle(cx, 8, segW, h, 0x7cfc98)
+            const seg = this.add.rectangle(cx, 5, segW, h, 0x7cfc98)
             this.healthSegments.push(seg)
         }
 
         this.playerNameLabel = this.add
-            .text(0, -8, "Cluck Norris", {
-                fontSize: "14px",
+            .text(0, -6, "Cluck Norris", {
+                fontSize: "10px",
                 color: "#0f3d6b"
             })
             .setOrigin(0.5, 1)
 
-        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 88, [
+        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 74, [
             this.playerNameLabel,
             bg,
             ...this.healthSegments
@@ -334,7 +334,7 @@ export default class Level6Scene extends Phaser.Scene {
         if (this.isComplete || this.isGameOver) return
 
         if (this.healthBarContainer && this.player?.active) {
-            this.healthBarContainer.setPosition(this.player.x, this.player.y - 88)
+            this.healthBarContainer.setPosition(this.player.x, this.player.y - 74)
         }
 
         if (this.heavenClouds) {
