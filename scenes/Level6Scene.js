@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 import level6MusicUrl from "../assets/level6-heaven.mp3?url"
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
 
@@ -8,11 +9,11 @@ export default class Level6Scene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })
-        this.load.audio("winSound", "assets/win.mp3")
+        this.load.audio("winSound", assetUrl("assets/win.mp3"))
         this.load.audio("level6Music", level6MusicUrl)
         this.load.audio("hoopPass", hoopPassUrl)
     }

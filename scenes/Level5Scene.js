@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 
 export default class Level5Scene extends Phaser.Scene {
@@ -7,16 +8,16 @@ export default class Level5Scene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })
         // Unique key — Phaser's global texture cache reuses "enemy" from other levels otherwise.
         this.load.image("level5Thought", level5ThoughtUrl)
-        this.load.audio("kickSound", "assets/kick.mp3")
-        this.load.audio("hitSound", "assets/hit.mp3")
-        this.load.audio("quoteSound", "assets/quote.mp3")
-        this.load.audio("winSound", "assets/win.mp3")
+        this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
+        this.load.audio("hitSound", assetUrl("assets/hit.mp3"))
+        this.load.audio("quoteSound", assetUrl("assets/quote.mp3"))
+        this.load.audio("winSound", assetUrl("assets/win.mp3"))
     }
 
     create() {

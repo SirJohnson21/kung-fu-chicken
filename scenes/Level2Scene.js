@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 
 export default class Level2Scene extends Phaser.Scene {
     constructor() {
@@ -6,19 +7,19 @@ export default class Level2Scene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })
 
-        this.load.image("enemy", "assets/enemy.png")
-        this.load.image("egg", "assets/egg.png")
+        this.load.image("enemy", assetUrl("assets/enemy.png"))
+        this.load.image("egg", assetUrl("assets/egg.png"))
 
-        this.load.audio("quoteSound", "assets/quote.mp3")
-        this.load.audio("eggSound", "assets/egg-collect.mp3")
-        this.load.audio("kickSound", "assets/kick.mp3")
-        this.load.audio("hitSound", "assets/hit.mp3")
-        this.load.audio("winSound", "assets/win.mp3")
+        this.load.audio("quoteSound", assetUrl("assets/quote.mp3"))
+        this.load.audio("eggSound", assetUrl("assets/egg-collect.mp3"))
+        this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
+        this.load.audio("hitSound", assetUrl("assets/hit.mp3"))
+        this.load.audio("winSound", assetUrl("assets/win.mp3"))
     }
 
     create() {

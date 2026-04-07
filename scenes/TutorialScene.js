@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 
 export default class TutorialScene extends Phaser.Scene {
     constructor() {
@@ -6,11 +7,11 @@ export default class TutorialScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })
-        this.load.audio("kickSound", "assets/kick.mp3")
+        this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
     }
 
     create() {

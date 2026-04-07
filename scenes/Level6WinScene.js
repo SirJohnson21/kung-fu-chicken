@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 
 export default class Level6WinScene extends Phaser.Scene {
     constructor() {
@@ -6,7 +7,7 @@ export default class Level6WinScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })

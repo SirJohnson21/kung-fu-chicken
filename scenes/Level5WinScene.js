@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 
 export default class Level5WinScene extends Phaser.Scene {
@@ -7,7 +8,7 @@ export default class Level5WinScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })

@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import { assetUrl } from "../utils/assetUrl.js"
 import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
 
 export default class Level3WinScene extends Phaser.Scene {
@@ -7,11 +8,11 @@ export default class Level3WinScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet("chicken", "assets/chicken.png", {
+        this.load.spritesheet("chicken", assetUrl("assets/chicken.png"), {
             frameWidth: 179,
             frameHeight: 150
         })
-        this.load.image("egg", "assets/egg.png")
+        this.load.image("egg", assetUrl("assets/egg.png"))
     }
 
     create() {
