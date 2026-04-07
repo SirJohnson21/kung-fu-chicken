@@ -57,15 +57,15 @@ export default class Level6WinScene extends Phaser.Scene {
         })
 
         this.add
-            .text(500, 500, "Press SPACE for menu", {
-                fontSize: "24px",
+            .text(500, 500, "Press SPACE for Level 7 — The Big Doubt", {
+                fontSize: "22px",
                 color: "#1a5f8a"
             })
             .setOrigin(0.5)
             .setDepth(10)
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("MenuScene")
+            this.scene.start("Level7Scene")
         })
     }
 }
