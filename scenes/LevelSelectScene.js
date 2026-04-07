@@ -1,12 +1,14 @@
 import Phaser from "phaser"
 
 const LEVELS = [
+    { key: "TutorialScene", title: "Tutorial", blurb: "Learn moves & kick" },
     { key: "Level1Scene", title: "Level 1", blurb: "Eggs & kicks on the farm" },
     { key: "Level2Scene", title: "Level 2", blurb: "Office positivity" },
     { key: "Level3Scene", title: "Level 3", blurb: "Egg Hoop bonus" },
     { key: "Level4Scene", title: "Level 4", blurb: "Atari positivity flow" },
     { key: "Level5Scene", title: "Level 5", blurb: "Kick the bad thoughts" },
-    { key: "Level6Scene", title: "Level 6", blurb: "Flow of hope & peace" }
+    { key: "Level6Scene", title: "Level 6", blurb: "Flow of hope & peace" },
+    { key: "Level7Scene", title: "Level 7", blurb: "The Big Doubt — final boss" }
 ]
 
 export default class LevelSelectScene extends Phaser.Scene {
@@ -25,7 +27,7 @@ export default class LevelSelectScene extends Phaser.Scene {
             .setOrigin(0.5)
 
         this.add
-            .text(500, 118, "↑ ↓ to select   ·   1–6 to jump in   ·   SPACE or ENTER to play", {
+            .text(500, 118, "↑ ↓ to select   ·   1–8 to jump in (1 = tutorial)   ·   SPACE or ENTER to play", {
                 fontSize: "18px",
                 color: "#a8a0c0"
             })
@@ -41,8 +43,8 @@ export default class LevelSelectScene extends Phaser.Scene {
         this.selectedIndex = 0
         this.rows = []
 
-        const startY = 175
-        const rowH = 52
+        const startY = 132
+        const rowH = 44
 
         LEVELS.forEach((lvl, i) => {
             const y = startY + i * rowH
@@ -95,7 +97,9 @@ export default class LevelSelectScene extends Phaser.Scene {
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE),
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR),
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FIVE),
-            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SIX)
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SIX),
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SEVEN),
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.EIGHT)
         ]
         digitKeys.forEach((key, i) => {
             key.on("down", () => {

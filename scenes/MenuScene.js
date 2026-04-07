@@ -6,15 +6,19 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(320, 220, "KUNG FU CHICKEN", {
-            fontSize: "48px",
-            color: "#ffffff"
-        })
+        this.add
+            .text(500, 220, "KUNG FU CHICKEN", {
+                fontSize: "48px",
+                color: "#ffffff"
+            })
+            .setOrigin(0.5)
 
-        this.add.text(350, 300, "Press SPACE to Start", {
-            fontSize: "28px",
-            color: "#ffff00"
-        })
+        this.add
+            .text(500, 300, "Press SPACE — level select (tutorial on the list)", {
+                fontSize: "22px",
+                color: "#ffff00"
+            })
+            .setOrigin(0.5)
 
         this.input.keyboard.once("keydown-SPACE", () => {
             this.scene.start("LevelSelectScene")
