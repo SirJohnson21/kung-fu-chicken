@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level7BossMusicUrl from "../assets/level7-boss.mp3?url"
 
@@ -47,7 +48,7 @@ export default class Level7Scene extends Phaser.Scene {
             color: "#e8d4ff"
         })
 
-        this.add.text(20, 46, "Kick doubts back into the boss — don’t let them touch you!", {
+        this.add.text(20, 46, "Kick doubts into the boss — don’t get hit — ESC — level select", {
             fontSize: "17px",
             color: "#b8a0d8"
         })
@@ -148,6 +149,8 @@ export default class Level7Scene extends Phaser.Scene {
         this.events.once("shutdown", () => {
             this.stopBossMusic()
         })
+
+        registerEscToLevelSelect(this)
     }
 
     stopBossMusic() {
@@ -475,6 +478,8 @@ export default class Level7Scene extends Phaser.Scene {
     }
 
     update() {
+        if (goToLevelSelectIfEsc(this)) return
+
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
         if (this.healthBarContainer && this.player?.active) {

@@ -14,14 +14,14 @@ export default class MenuScene extends Phaser.Scene {
             .setOrigin(0.5)
 
         this.add
-            .text(500, 300, "Press SPACE — level select (tutorial on the list)", {
-                fontSize: "22px",
+            .text(500, 300, "Press SPACE — how are you feeling? Then level select.", {
+                fontSize: "20px",
                 color: "#ffff00"
             })
             .setOrigin(0.5)
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("LevelSelectScene")
+            this.scene.start("FeelingScene")
         })
     }
 }

@@ -80,7 +80,7 @@ export default class TutorialScene extends Phaser.Scene {
         this.lineKick = this.add.text(40, 186, "○  X  Kick (try it once)", lineStyle)
 
         this.hintReady = this.add
-            .text(500, 528, "SPACE — choose a level   ·   ESC — title screen", {
+            .text(500, 528, "SPACE — choose a level   ·   ESC — level select", {
                 fontSize: "20px",
                 color: "#ffff88"
             })
@@ -109,9 +109,9 @@ export default class TutorialScene extends Phaser.Scene {
         const all = this.flags.left && this.flags.right && this.flags.jump && this.flags.kick
         this.hintReady.setColor(all ? "#aaffcc" : "#ffff88")
         if (all) {
-            this.hintReady.setText("Nice! SPACE — choose a level   ·   ESC — title screen")
+            this.hintReady.setText("Nice! SPACE — choose a level   ·   ESC — level select")
         } else {
-            this.hintReady.setText("SPACE — choose a level   ·   ESC — title screen")
+            this.hintReady.setText("SPACE — choose a level   ·   ESC — level select")
         }
     }
 
@@ -121,7 +121,7 @@ export default class TutorialScene extends Phaser.Scene {
             return
         }
         if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) {
-            this.scene.start("MenuScene")
+            this.scene.start("LevelSelectScene")
             return
         }
 

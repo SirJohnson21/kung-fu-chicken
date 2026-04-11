@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 
 export default class Level5Scene extends Phaser.Scene {
@@ -28,7 +29,7 @@ export default class Level5Scene extends Phaser.Scene {
             color: "#e8e0ff"
         })
 
-        this.add.text(20, 52, "Move & jump | X to kick bad thoughts away before they reach you!", {
+        this.add.text(20, 52, "Move & jump | X to kick bad thoughts | ESC — level select", {
             fontSize: "18px",
             color: "#b8a8e0"
         })
@@ -123,6 +124,8 @@ export default class Level5Scene extends Phaser.Scene {
         })
 
         this.spawnThought()
+
+        registerEscToLevelSelect(this)
     }
 
     updateHud() {
@@ -313,6 +316,8 @@ export default class Level5Scene extends Phaser.Scene {
     }
 
     update() {
+        if (goToLevelSelectIfEsc(this)) return
+
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
         if (this.healthBarContainer && this.player?.active) {

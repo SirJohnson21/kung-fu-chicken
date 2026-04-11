@@ -1,5 +1,7 @@
 import Phaser from "phaser"
 import MenuScene from "./scenes/MenuScene.js"
+import FeelingScene from "./scenes/FeelingScene.js"
+import FeelingAfterScene from "./scenes/FeelingAfterScene.js"
 import TutorialScene from "./scenes/TutorialScene.js"
 import LevelSelectScene from "./scenes/LevelSelectScene.js"
 import Level1Scene from "./scenes/Level1Scene.js"
@@ -32,6 +34,8 @@ const config = {
     },
     scene: [
         MenuScene,
+        FeelingScene,
+        FeelingAfterScene,
         TutorialScene,
         LevelSelectScene,
         Level1Scene,

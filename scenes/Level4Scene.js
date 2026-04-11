@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 
 export default class Level4Scene extends Phaser.Scene {
     constructor() {
@@ -32,7 +33,7 @@ export default class Level4Scene extends Phaser.Scene {
             color: "#00ffcc"
         })
 
-        this.add.text(20, 52, "Collect positivity (eggs) • Avoid negativity (stress) • X kick", {
+        this.add.text(20, 52, "Collect positivity (eggs) • Avoid stress • X kick • ESC — level select", {
             fontSize: "18px",
             color: "#7fffd4"
         })
@@ -115,6 +116,8 @@ export default class Level4Scene extends Phaser.Scene {
             callback: this.spawnStress,
             loop: true
         })
+
+        registerEscToLevelSelect(this)
     }
 
     drawAtariBackground() {
@@ -313,6 +316,8 @@ export default class Level4Scene extends Phaser.Scene {
     }
 
     update() {
+        if (goToLevelSelectIfEsc(this)) return
+
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
         // Update flowing objects (wavy motion)

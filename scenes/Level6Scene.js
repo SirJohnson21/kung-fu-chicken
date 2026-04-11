@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import level6MusicUrl from "../assets/level6-heaven.mp3?url"
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
 
@@ -29,7 +30,7 @@ export default class Level6Scene extends Phaser.Scene {
             .setDepth(30)
 
         this.add
-            .text(20, 48, "↑ ↓ steer through each ring — each clean pass counts!", {
+            .text(20, 48, "↑ ↓ steer through each ring — ESC — level select", {
                 fontSize: "17px",
                 color: "#2d5580"
             })
@@ -95,6 +96,8 @@ export default class Level6Scene extends Phaser.Scene {
                 this.sound.stopByKey("level6Music")
             }
         })
+
+        registerEscToLevelSelect(this)
     }
 
     buildHeavenBackdrop() {
@@ -332,6 +335,8 @@ export default class Level6Scene extends Phaser.Scene {
     }
 
     update(_time, delta) {
+        if (goToLevelSelectIfEsc(this)) return
+
         if (this.isComplete || this.isGameOver) return
 
         if (this.healthBarContainer && this.player?.active) {

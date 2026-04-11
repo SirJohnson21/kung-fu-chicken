@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 
 export default class Level3Scene extends Phaser.Scene {
     constructor() {
@@ -25,7 +26,7 @@ export default class Level3Scene extends Phaser.Scene {
             color: "#222222"
         })
 
-        this.add.text(20, 55, "Move with arrows | UP to jump | SPACE to shoot", {
+        this.add.text(20, 55, "Move with arrows | UP to jump | SPACE to shoot | ESC — level select", {
             fontSize: "20px",
             color: "#222222"
         })
@@ -105,6 +106,8 @@ export default class Level3Scene extends Phaser.Scene {
             align: "center",
             wordWrap: { width: 380 }
         }).setOrigin(0.5).setVisible(false)
+
+        registerEscToLevelSelect(this)
     }
 
     shootEgg() {
@@ -181,6 +184,8 @@ export default class Level3Scene extends Phaser.Scene {
     }
 
     update() {
+        if (goToLevelSelectIfEsc(this)) return
+
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
         const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
 

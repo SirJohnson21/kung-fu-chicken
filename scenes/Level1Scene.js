@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 
 export default class Level1Scene extends Phaser.Scene {
     constructor() {
@@ -22,7 +23,7 @@ export default class Level1Scene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(20, 20, "Arrow keys to move | UP to jump | X to kick", {
+        this.add.text(20, 20, "Arrow keys to move | UP to jump | X to kick | ESC — level select", {
             fontSize: "24px",
             color: "#ffffff"
         })
@@ -115,6 +116,8 @@ export default class Level1Scene extends Phaser.Scene {
             yoyo: true,
             repeat: -1
         })
+
+        registerEscToLevelSelect(this)
     }
 
     collectGoodie(player, goodie) {
@@ -188,6 +191,8 @@ export default class Level1Scene extends Phaser.Scene {
     }
 
     update() {
+        if (goToLevelSelectIfEsc(this)) return
+
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
         const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
 

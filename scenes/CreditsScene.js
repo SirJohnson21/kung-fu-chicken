@@ -43,15 +43,15 @@ export default class CreditsScene extends Phaser.Scene {
             .setDepth(10)
 
         this.add
-            .text(500, 510, "Press SPACE — title screen", {
-                fontSize: "22px",
+            .text(500, 510, "Press SPACE — how do you feel now?", {
+                fontSize: "20px",
                 color: "#6b7280"
             })
             .setOrigin(0.5)
             .setDepth(10)
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("MenuScene")
+            this.scene.start("FeelingAfterScene")
         })
     }
 }
