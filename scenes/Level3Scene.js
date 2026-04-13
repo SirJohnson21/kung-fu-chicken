@@ -2,6 +2,8 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
+import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import level3BgmUrl from "../assets/level3-bgm.m4a?url"
 
 export default class Level3Scene extends Phaser.Scene {
     constructor() {
@@ -16,6 +18,7 @@ export default class Level3Scene extends Phaser.Scene {
 
         this.load.image("egg", assetUrl("assets/egg.png"))
         this.load.audio("winSound", assetUrl("assets/win.mp3"))
+        this.load.audio("level3Bgm", level3BgmUrl)
     }
 
     create() {
@@ -108,6 +111,9 @@ export default class Level3Scene extends Phaser.Scene {
         }).setOrigin(0.5).setVisible(false)
 
         registerEscToLevelSelect(this)
+
+        playLevelBgm(this, "level3Bgm")
+        registerLevelBgmShutdown(this, "level3Bgm")
     }
 
     shootEgg() {

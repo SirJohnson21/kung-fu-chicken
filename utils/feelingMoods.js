@@ -27,3 +27,9 @@ export function preloadFeelingMoodImages(scene) {
 export function getFeelingIconScale(icon, maxDim = 44) {
     return Math.min(maxDim / icon.width, maxDim / icon.height)
 }
+
+/** Scale image to fit inside a rectangle (good for wide or tall mood art). */
+export function getFeelingIconScaleInBox(icon, maxW, maxH) {
+    if (!icon.width || !icon.height) return 1
+    return Math.min(maxW / icon.width, maxH / icon.height)
+}

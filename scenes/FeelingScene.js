@@ -1,7 +1,12 @@
 import Phaser from "phaser"
-import { FEELING_MOODS, preloadFeelingMoodImages, getFeelingIconScale } from "../utils/feelingMoods.js"
+import {
+    FEELING_MOODS,
+    preloadFeelingMoodImages,
+    getFeelingIconScaleInBox
+} from "../utils/feelingMoods.js"
+import { MOOD_GRID, getMoodCellCenters, nextMoodGridIndex } from "../utils/feelingMoodGrid.js"
 
-const ICON_SELECTED_MULT = 1.12
+const ICON_SELECTED_MULT = 1.05
 
 export default class FeelingScene extends Phaser.Scene {
     constructor() {
@@ -16,31 +21,35 @@ export default class FeelingScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor("#1a1625")
 
         this.add
-            .text(500, 70, "HOW ARE YOU FEELING?", {
-                fontSize: "36px",
+            .text(500, 36, "HOW ARE YOU FEELING?", {
+                fontSize: "26px",
                 color: "#e8e0ff"
             })
             .setOrigin(0.5)
 
         this.add
-            .text(500, 118, "↑ ↓ choose   ·   1–4 jump   ·   SPACE or ENTER — continue   ·   ESC — title", {
-                fontSize: "17px",
-                color: "#a8a0c0"
+            .text(500, 74, "Pick a box  ·  arrows move  ·  1–4  ·  SPACE / ENTER  ·  ESC — title", {
+                fontSize: "13px",
+                color: "#a8a0c0",
+                wordWrap: { width: 960 },
+                align: "center"
             })
             .setOrigin(0.5)
 
         this.selectedIndex = 0
         this.rows = []
 
-        const startY = 168
-        const rowH = 52
+        const centers = getMoodCellCenters(96)
+        const { cellW, cellH } = MOOD_GRID
+        const iconMaxW = cellW - 28
+        const iconMaxH = 112
 
         FEELING_MOODS.forEach((m, i) => {
-            const y = startY + i * rowH
-            const container = this.add.container(500, y)
+            const { x, y } = centers[i]
+            const container = this.add.container(x, y)
 
             const bg = this.add
-                .rectangle(0, 0, 640, 48, 0x2a2840)
+                .rectangle(0, 0, cellW, cellH, 0x2a2840)
                 .setStrokeStyle(2, 0x4a4570)
                 .setInteractive({ useHandCursor: true })
                 .on("pointerover", () => {
@@ -52,23 +61,25 @@ export default class FeelingScene extends Phaser.Scene {
                     this.refreshSelectionHighlight()
                 })
 
-            const icon = this.add.image(-268, 0, m.textureKey).setOrigin(0.5, 0.5)
-            const iconBaseScale = getFeelingIconScale(icon)
+            const icon = this.add.image(0, -54, m.textureKey).setOrigin(0.5, 0.5)
+            const iconBaseScale = getFeelingIconScaleInBox(icon, iconMaxW, iconMaxH)
             icon.setScale(iconBaseScale)
 
             const title = this.add
-                .text(-168, 0, m.label, {
-                    fontSize: "24px",
+                .text(0, 34, m.label, {
+                    fontSize: "19px",
                     color: "#ffffff"
                 })
-                .setOrigin(0, 0.5)
+                .setOrigin(0.5, 0.5)
 
             const blurb = this.add
-                .text(8, 0, m.blurb, {
-                    fontSize: "18px",
-                    color: "#c4b8e0"
+                .text(0, 62, m.blurb, {
+                    fontSize: "13px",
+                    color: "#c4b8e0",
+                    align: "center",
+                    wordWrap: { width: cellW - 28 }
                 })
-                .setOrigin(0, 0.5)
+                .setOrigin(0.5, 0)
 
             container.add([bg, icon, title, blurb])
             this.rows.push({ container, bg, title, blurb, icon, iconBaseScale })
@@ -99,7 +110,7 @@ export default class FeelingScene extends Phaser.Scene {
         this.rows.forEach((row, i) => {
             const on = i === this.selectedIndex
             row.bg.setFillStyle(on ? 0x3d3a62 : 0x2a2840)
-            row.bg.setStrokeStyle(2, on ? 0xd4c4ff : 0x4a4570)
+            row.bg.setStrokeStyle(3, on ? 0xd4c4ff : 0x4a4570)
             row.title.setColor(on ? "#fffef8" : "#ffffff")
             row.blurb.setColor(on ? "#e8e0ff" : "#c4b8e0")
             row.icon.setScale(row.iconBaseScale * (on ? ICON_SELECTED_MULT : 1))
@@ -117,14 +128,19 @@ export default class FeelingScene extends Phaser.Scene {
             this.scene.start("MenuScene")
             return
         }
-        if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-            this.selectedIndex = (this.selectedIndex + FEELING_MOODS.length - 1) % FEELING_MOODS.length
+
+        const next = nextMoodGridIndex(
+            this.selectedIndex,
+            Phaser.Input.Keyboard.JustDown(this.cursors.up),
+            Phaser.Input.Keyboard.JustDown(this.cursors.down),
+            Phaser.Input.Keyboard.JustDown(this.cursors.left),
+            Phaser.Input.Keyboard.JustDown(this.cursors.right)
+        )
+        if (next !== this.selectedIndex) {
+            this.selectedIndex = next
             this.refreshSelectionHighlight()
         }
-        if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-            this.selectedIndex = (this.selectedIndex + 1) % FEELING_MOODS.length
-            this.refreshSelectionHighlight()
-        }
+
         if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
             this.confirmAndGo()
         }

@@ -1,8 +1,9 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
-import level6MusicUrl from "../assets/level6-heaven.mp3?url"
+import { playLevelBgm, registerLevelBgmShutdown, stopLevelBgm } from "../utils/levelBgm.js"
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
+import level6BgmUrl from "../assets/level6-bgm.m4a?url"
 
 export default class Level6Scene extends Phaser.Scene {
     constructor() {
@@ -15,8 +16,8 @@ export default class Level6Scene extends Phaser.Scene {
             frameHeight: 150
         })
         this.load.audio("winSound", assetUrl("assets/win.mp3"))
-        this.load.audio("level6Music", level6MusicUrl)
         this.load.audio("hoopPass", hoopPassUrl)
+        this.load.audio("level6Bgm", level6BgmUrl)
     }
 
     create() {
@@ -87,15 +88,8 @@ export default class Level6Scene extends Phaser.Scene {
             loop: true
         })
 
-        if (this.sound.get("level6Music")) {
-            this.sound.play("level6Music", { loop: true, volume: 0.32 })
-        }
-
-        this.events.once("shutdown", () => {
-            if (this.cache.audio.exists("level6Music")) {
-                this.sound.stopByKey("level6Music")
-            }
-        })
+        playLevelBgm(this, "level6Bgm")
+        registerLevelBgmShutdown(this, "level6Bgm")
 
         registerEscToLevelSelect(this)
     }
@@ -262,9 +256,7 @@ export default class Level6Scene extends Phaser.Scene {
         if (this.lives <= 0) {
             this.isGameOver = true
             if (this.spawnTimer) this.spawnTimer.remove(false)
-            if (this.cache.audio.exists("level6Music")) {
-                this.sound.stopByKey("level6Music")
-            }
+            stopLevelBgm(this, "level6Bgm")
             this.time.delayedCall(500, () => this.scene.restart())
         }
     }
@@ -321,9 +313,7 @@ export default class Level6Scene extends Phaser.Scene {
         this.isComplete = true
         if (this.spawnTimer) this.spawnTimer.remove(false)
 
-        if (this.cache.audio.exists("level6Music")) {
-            this.sound.stopByKey("level6Music")
-        }
+        stopLevelBgm(this, "level6Bgm")
 
         if (this.sound.get("winSound")) {
             this.sound.play("winSound", { volume: 0.5 })
