@@ -1,4 +1,6 @@
 import Phaser from "phaser"
+import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import levelSelectBgmUrl from "../assets/level-select-bgm.mp3?url"
 
 const LEVELS = [
     { key: "TutorialScene", title: "Tutorial", blurb: "Learn moves & kick" },
@@ -14,6 +16,10 @@ const LEVELS = [
 export default class LevelSelectScene extends Phaser.Scene {
     constructor() {
         super("LevelSelectScene")
+    }
+
+    preload() {
+        this.load.audio("levelSelectBgm", levelSelectBgmUrl)
     }
 
     create() {
@@ -110,6 +116,9 @@ export default class LevelSelectScene extends Phaser.Scene {
         })
 
         this.refreshSelectionHighlight()
+
+        playLevelBgm(this, "levelSelectBgm")
+        registerLevelBgmShutdown(this, "levelSelectBgm")
     }
 
     refreshSelectionHighlight() {

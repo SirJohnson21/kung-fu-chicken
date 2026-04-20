@@ -1,6 +1,8 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
+import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import level1BgmUrl from "../assets/level1-bgm.m4a?url"
 
 export default class Level1Scene extends Phaser.Scene {
     constructor() {
@@ -20,6 +22,7 @@ export default class Level1Scene extends Phaser.Scene {
         this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
         this.load.audio("hitSound", assetUrl("assets/hit.mp3"))
         this.load.audio("winSound", assetUrl("assets/win.mp3"))
+        this.load.audio("level1Bgm", level1BgmUrl)
     }
 
     create() {
@@ -118,6 +121,9 @@ export default class Level1Scene extends Phaser.Scene {
         })
 
         registerEscToLevelSelect(this)
+
+        playLevelBgm(this, "level1Bgm")
+        registerLevelBgmShutdown(this, "level1Bgm")
     }
 
     collectGoodie(player, goodie) {

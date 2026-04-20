@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "generate-sounds": "node scripts/generate-sounds.js",
     "generate-enemies": "node scripts/generate-enemies.js",
-    "process-level5-enemy": "node scripts/process-level5-enemy.js"
+    "process-level5-enemy": "node scripts/process-level5-enemy.js",
+    "encode-level1-bgm": "node scripts/encode-level1-bgm.js"
   },
   "keywords": [],
   "author": "",
