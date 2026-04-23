@@ -3,6 +3,7 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level3BgmUrl from "../assets/level3-bgm.m4a?url"
 
 export default class Level3Scene extends Phaser.Scene {
@@ -84,6 +85,17 @@ export default class Level3Scene extends Phaser.Scene {
             repeat: -1
         })
 
+        this.lives = 3
+        setupPlayerHealthBar(this, {
+            yOffset: -80,
+            bgColor: 0xffffff,
+            borderColor: 0x333333,
+            filledColor: 0x38bdf8,
+            emptyColor: 0xc5d4e0,
+            labelColor: "#1e293b"
+        })
+        this.refreshHealthBar()
+
         this.eggs = this.physics.add.group()
 
         this.jokes = [
@@ -102,13 +114,17 @@ export default class Level3Scene extends Phaser.Scene {
         this.jokeBubble = this.add.rectangle(500, 130, 420, 70, 0xffffff)
             .setStrokeStyle(3, 0x222222)
             .setVisible(false)
+            .setDepth(1100)
 
         this.jokeText = this.add.text(500, 130, "", {
             fontSize: "22px",
             color: "#222222",
             align: "center",
             wordWrap: { width: 380 }
-        }).setOrigin(0.5).setVisible(false)
+        })
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setDepth(1100)
 
         registerEscToLevelSelect(this)
 
@@ -191,6 +207,8 @@ export default class Level3Scene extends Phaser.Scene {
 
     update() {
         if (goToLevelSelectIfEsc(this)) return
+
+        syncPlayerHealthBarPosition(this)
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
         const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround

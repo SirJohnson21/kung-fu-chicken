@@ -68,10 +68,12 @@ export default class Level2WinScene extends Phaser.Scene {
             color: "#222222"
         }).setOrigin(0.5)
 
-        this.quote2 = this.add.rectangle(820, 260, 220, 55, 0xffffff).setStrokeStyle(2, 0x222222)
+        this.quote2 = this.add.rectangle(820, 260, 220, 62, 0xffffff).setStrokeStyle(2, 0x222222)
         this.quoteText2 = this.add.text(820, 260, "Progress beats perfection.", {
-            fontSize: "18px",
-            color: "#222222"
+            fontSize: "16px",
+            color: "#222222",
+            align: "center",
+            wordWrap: { width: 200 }
         }).setOrigin(0.5)
 
         this.tweens.add({

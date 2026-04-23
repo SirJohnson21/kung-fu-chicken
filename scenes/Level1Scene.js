@@ -2,6 +2,7 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level1BgmUrl from "../assets/level1-bgm.m4a?url"
 
 export default class Level1Scene extends Phaser.Scene {
@@ -70,6 +71,18 @@ export default class Level1Scene extends Phaser.Scene {
 
         this.player.setFrame(0)
         this.isKicking = false
+        this.lives = 3
+        this.invulnerableUntil = 0
+
+        setupPlayerHealthBar(this, {
+            yOffset: -80,
+            bgColor: 0x2a2418,
+            borderColor: 0xffcc66,
+            filledColor: 0x6fdc83,
+            emptyColor: 0x5c5346,
+            labelColor: "#fff8e0"
+        })
+        this.refreshHealthBar()
 
         // Eggs
         this.goodiesCollected = 0
@@ -148,12 +161,20 @@ export default class Level1Scene extends Phaser.Scene {
     }
 
     hitEnemy() {
-        if (!this.isKicking) {
-            if (this.sound.get("hitSound")) {
-                this.sound.play("hitSound", { volume: 0.6 })
-            }
+        if (this.isKicking) return
+        if (this.time.now < this.invulnerableUntil) return
 
-            this.time.delayedCall(150, () => {
+        if (this.sound.get("hitSound")) {
+            this.sound.play("hitSound", { volume: 0.6 })
+        }
+
+        this.lives -= 1
+        this.refreshHealthBar()
+        this.invulnerableUntil = this.time.now + 1000
+        this.cameras.main.flash(140, 255, 200, 120, false)
+
+        if (this.lives <= 0) {
+            this.time.delayedCall(180, () => {
                 this.scene.restart()
             })
         }
@@ -198,6 +219,9 @@ export default class Level1Scene extends Phaser.Scene {
 
     update() {
         if (goToLevelSelectIfEsc(this)) return
+
+        syncPlayerHealthBarPosition(this)
+        this.player.setAlpha(this.time.now < this.invulnerableUntil ? 0.52 : 1)
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
         const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround

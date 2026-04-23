@@ -2,6 +2,7 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level5BgmUrl from "../assets/level5-bgm.m4a?url"
 
@@ -87,7 +88,14 @@ export default class Level5Scene extends Phaser.Scene {
             color: "#ffffff"
         })
         this.updateHud()
-        this.createHealthBar()
+        setupPlayerHealthBar(this, {
+            yOffset: -78,
+            bgColor: 0x1a1530,
+            borderColor: 0x9b7dff,
+            filledColor: 0x4ade80,
+            emptyColor: 0x4a4558,
+            labelColor: "#e8dcff"
+        })
         this.refreshHealthBar()
 
         this.kickLines = [
@@ -101,16 +109,22 @@ export default class Level5Scene extends Phaser.Scene {
             "Peace — bucket by bucket!"
         ]
 
-        this.lineBubble = this.add.rectangle(500, 125, 520, 56, 0x2a2440)
+        // Just below the "Thoughts kicked" HUD (hud is y=90, ~22px line).
+        const kickLineY = 146
+        this.lineBubble = this.add.rectangle(500, kickLineY, 520, 56, 0x2a2440)
             .setStrokeStyle(2, 0x9b7dff)
             .setVisible(false)
+            .setDepth(1100)
 
-        this.lineText = this.add.text(500, 125, "", {
+        this.lineText = this.add.text(500, kickLineY, "", {
             fontSize: "20px",
             color: "#f0e8ff",
             align: "center",
             wordWrap: { width: 480 }
-        }).setOrigin(0.5).setVisible(false)
+        })
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setDepth(1100)
 
         this.thoughts = this.physics.add.group({
             allowGravity: false,
@@ -136,46 +150,6 @@ export default class Level5Scene extends Phaser.Scene {
 
     updateHud() {
         this.hud.setText(`Thoughts kicked: ${this.kicksLanded} / ${this.targetKicks}`)
-    }
-
-    createHealthBar() {
-        const h = 8
-        const segW = 15
-        const gap = 2
-        const totalW = 3 * segW + 2 * gap
-        const bg = this.add
-            .rectangle(0, 5, totalW + 6, h + 3, 0x1a1530)
-            .setStrokeStyle(1, 0x9b7dff)
-
-        this.healthSegments = []
-        const startX = -totalW / 2 + segW / 2
-        for (let i = 0; i < 3; i++) {
-            const cx = startX + i * (segW + gap)
-            const seg = this.add.rectangle(cx, 5, segW, h, 0x4ade80)
-            this.healthSegments.push(seg)
-        }
-
-        this.playerNameLabel = this.add
-            .text(0, -6, "Cluck Norris", {
-                fontSize: "10px",
-                color: "#e8dcff"
-            })
-            .setOrigin(0.5, 1)
-
-        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 78, [
-            this.playerNameLabel,
-            bg,
-            ...this.healthSegments
-        ])
-        this.healthBarContainer.setDepth(1000)
-    }
-
-    refreshHealthBar() {
-        if (!this.healthSegments) return
-        for (let i = 0; i < 3; i++) {
-            const filled = i < this.lives
-            this.healthSegments[i].setFillStyle(filled ? 0x4ade80 : 0x4a4558)
-        }
     }
 
     spawnThought() {
@@ -326,9 +300,7 @@ export default class Level5Scene extends Phaser.Scene {
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
-        if (this.healthBarContainer && this.player?.active) {
-            this.healthBarContainer.setPosition(this.player.x, this.player.y - 78)
-        }
+        syncPlayerHealthBarPosition(this)
 
         this.thoughts.getChildren().forEach((pot) => {
             if (!pot.active) return

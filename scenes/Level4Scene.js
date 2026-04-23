@@ -2,6 +2,7 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level4BgmUrl from "../assets/level4-bgm.m4a?url"
 
 export default class Level4Scene extends Phaser.Scene {
@@ -85,6 +86,9 @@ export default class Level4Scene extends Phaser.Scene {
         this.isKicking = false
         this.isWin = false
         this.isGameOver = false
+        this.lives = 3
+        this.invulnerableUntil = 0
+        this.hasShownKickTip = false
 
         // Positivity stream
         this.targetPositives = 8
@@ -107,15 +111,37 @@ export default class Level4Scene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.positives, this.collectPositive, null, this)
         this.physics.add.overlap(this.player, this.stress, this.hitStress, null, this)
 
+        setupPlayerHealthBar(this, {
+            yOffset: -82,
+            bgColor: 0x0b1a40,
+            borderColor: 0x00ffcc,
+            filledColor: 0x00ff88,
+            emptyColor: 0x3d5c6e,
+            labelColor: "#7fffd4"
+        })
+        this.refreshHealthBar()
+
+        this.kickTipBubble = this.add.rectangle(0, 0, 180, 44, 0x0b1a40)
+            .setStrokeStyle(2, 0x00ffcc)
+            .setVisible(false)
+            .setDepth(1100)
+        this.kickTipText = this.add.text(0, 0, "Kick it!", {
+            fontSize: "20px",
+            color: "#eaffff"
+        })
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setDepth(1101)
+
         // Spawners
         this.positiveSpawn = this.time.addEvent({
-            delay: 350,
+            delay: 470,
             callback: this.spawnPositive,
             loop: true
         })
 
         this.stressSpawn = this.time.addEvent({
-            delay: 900,
+            delay: 1250,
             callback: this.spawnStress,
             loop: true
         })
@@ -173,12 +199,12 @@ export default class Level4Scene extends Phaser.Scene {
         orb.setScale(0.06 + Math.random() * 0.01)
         orb.setTint(0x00ff88)
         orb.body.setAllowGravity(false)
-        orb.body.setVelocityX(-Phaser.Math.Between(130, 220))
+        orb.body.setVelocityX(-Phaser.Math.Between(95, 155))
 
         // Flow motion (wavy y)
         orb.flowBaseY = y
-        orb.flowAmp = Phaser.Math.Between(8, 18)
-        orb.flowSpeed = Phaser.Math.FloatBetween(0.8, 1.4)
+        orb.flowAmp = Phaser.Math.Between(6, 14)
+        orb.flowSpeed = Phaser.Math.FloatBetween(0.55, 1.0)
         orb.flowPhase = Phaser.Math.FloatBetween(0, Math.PI * 2)
 
         // Shrink collision area for nicer feel
@@ -192,11 +218,11 @@ export default class Level4Scene extends Phaser.Scene {
         const bot = this.stress.create(1050, y, "enemy")
         bot.setScale(0.085)
         bot.body.setAllowGravity(false)
-        bot.body.setVelocityX(-Phaser.Math.Between(170, 260))
+        bot.body.setVelocityX(-Phaser.Math.Between(120, 180))
 
         bot.flowBaseY = y
-        bot.flowAmp = Phaser.Math.Between(10, 22)
-        bot.flowSpeed = Phaser.Math.FloatBetween(0.7, 1.2)
+        bot.flowAmp = Phaser.Math.Between(8, 16)
+        bot.flowSpeed = Phaser.Math.FloatBetween(0.5, 0.95)
         bot.flowPhase = Phaser.Math.FloatBetween(0, Math.PI * 2)
 
         bot.body.setSize(bot.width * 0.45, bot.height * 0.45, true)
@@ -225,15 +251,57 @@ export default class Level4Scene extends Phaser.Scene {
         if (this.isWin || this.isGameOver) return
         if (!bot || !bot.active) return
         if (this.isKicking) return
+        if (this.time.now < this.invulnerableUntil) return
 
-        this.isGameOver = true
+        bot.destroy()
 
         if (this.sound.get("hitSound")) {
             this.sound.play("hitSound", { volume: 0.6 })
         }
 
-        this.time.delayedCall(220, () => {
-            this.scene.restart()
+        this.lives -= 1
+        this.refreshHealthBar()
+        this.invulnerableUntil = this.time.now + 900
+        this.cameras.main.flash(160, 255, 40, 80, false)
+        if (!this.hasShownKickTip) {
+            this.hasShownKickTip = true
+            this.showKickTip()
+        }
+
+        if (this.lives <= 0) {
+            this.isGameOver = true
+            this.time.delayedCall(220, () => {
+                this.scene.restart()
+            })
+        }
+    }
+
+    showKickTip() {
+        const tipX = this.player.x
+        const tipY = this.player.y - 130
+        this.kickTipBubble.setPosition(tipX, tipY)
+        this.kickTipText.setPosition(tipX, tipY)
+        this.kickTipBubble.setAlpha(0)
+        this.kickTipText.setAlpha(0)
+        this.kickTipBubble.setVisible(true)
+        this.kickTipText.setVisible(true)
+
+        this.tweens.add({
+            targets: [this.kickTipBubble, this.kickTipText],
+            alpha: 1,
+            duration: 150
+        })
+
+        this.time.delayedCall(1200, () => {
+            this.tweens.add({
+                targets: [this.kickTipBubble, this.kickTipText],
+                alpha: 0,
+                duration: 280,
+                onComplete: () => {
+                    this.kickTipBubble.setVisible(false)
+                    this.kickTipText.setVisible(false)
+                }
+            })
         })
     }
 
@@ -323,6 +391,9 @@ export default class Level4Scene extends Phaser.Scene {
 
     update() {
         if (goToLevelSelectIfEsc(this)) return
+
+        syncPlayerHealthBarPosition(this)
+        this.player.setAlpha(this.time.now < this.invulnerableUntil ? 0.5 : 1)
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 

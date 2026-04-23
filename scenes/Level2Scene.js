@@ -2,6 +2,7 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level2BgmUrl from "../assets/level2-bgm.m4a?url"
 
 export default class Level2Scene extends Phaser.Scene {
@@ -91,6 +92,18 @@ export default class Level2Scene extends Phaser.Scene {
 
         this.player.setFrame(0)
         this.isKicking = false
+        this.lives = 3
+        this.invulnerableUntil = 0
+
+        setupPlayerHealthBar(this, {
+            yOffset: -80,
+            bgColor: 0xf0f4f8,
+            borderColor: 0x444444,
+            filledColor: 0x22c55e,
+            emptyColor: 0xb8c4ce,
+            labelColor: "#1a1a1a"
+        })
+        this.refreshHealthBar()
 
         this.itemsCollected = 0
         this.totalItems = 4
@@ -139,13 +152,17 @@ export default class Level2Scene extends Phaser.Scene {
         this.quoteBubble = this.add.rectangle(0, 0, 220, 60, 0xffffff)
             .setStrokeStyle(2, 0x222222)
             .setVisible(false)
+            .setDepth(1100)
 
         this.quoteText = this.add.text(0, 0, "", {
             fontSize: "18px",
             color: "#222222",
             align: "center",
             wordWrap: { width: 200 }
-        }).setOrigin(0.5).setVisible(false)
+        })
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setDepth(1100)
 
         this.quotes = [
             "Keep going.",
@@ -258,12 +275,20 @@ export default class Level2Scene extends Phaser.Scene {
     }
 
     hitEnemy() {
-        if (!this.isKicking) {
-            if (this.sound.get("hitSound")) {
-                this.sound.play("hitSound", { volume: 0.6 })
-            }
+        if (this.isKicking) return
+        if (this.time.now < this.invulnerableUntil) return
 
-            this.time.delayedCall(150, () => {
+        if (this.sound.get("hitSound")) {
+            this.sound.play("hitSound", { volume: 0.6 })
+        }
+
+        this.lives -= 1
+        this.refreshHealthBar()
+        this.invulnerableUntil = this.time.now + 1000
+        this.cameras.main.flash(140, 255, 220, 200, false)
+
+        if (this.lives <= 0) {
+            this.time.delayedCall(180, () => {
                 this.scene.restart()
             })
         }
@@ -308,6 +333,9 @@ export default class Level2Scene extends Phaser.Scene {
 
     update() {
         if (goToLevelSelectIfEsc(this)) return
+
+        syncPlayerHealthBarPosition(this)
+        this.player.setAlpha(this.time.now < this.invulnerableUntil ? 0.52 : 1)
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
         const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
@@ -392,11 +420,13 @@ export default class Level2Scene extends Phaser.Scene {
         }
 
         if (this.quoteBubble.visible) {
+            // Health bar uses yOffset -80; “Cluck Norris” sits just above that — keep bubble bottom slightly above the label.
+            const quoteY = this.player.y - 131
             this.quoteBubble.x = this.player.x
-            this.quoteBubble.y = this.player.y - 80
+            this.quoteBubble.y = quoteY
 
             this.quoteText.x = this.player.x
-            this.quoteText.y = this.player.y - 80
+            this.quoteText.y = quoteY
         }
     }
 }

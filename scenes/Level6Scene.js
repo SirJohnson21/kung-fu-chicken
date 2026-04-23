@@ -2,6 +2,7 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown, stopLevelBgm } from "../utils/levelBgm.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
 import level6BgmUrl from "../assets/level6-bgm.m4a?url"
 
@@ -39,7 +40,7 @@ export default class Level6Scene extends Phaser.Scene {
 
         this.scrollSpeed = 195
         this.hoopsCleared = 0
-        this.targetHoops = 14
+        this.targetHoops = 10
         this.lives = 3
         this.invulnerableUntil = 0
         this.isComplete = false
@@ -75,7 +76,14 @@ export default class Level6Scene extends Phaser.Scene {
         this.hoops = []
         this.hoopSpawnIndex = 0
 
-        this.createHealthBar()
+        setupPlayerHealthBar(this, {
+            yOffset: -74,
+            bgColor: 0x3d7cba,
+            borderColor: 0xffffff,
+            filledColor: 0x7cfc98,
+            emptyColor: 0x8fa8c0,
+            labelColor: "#0f3d6b"
+        })
         this.refreshHealthBar()
 
         this.spawnHoop()
@@ -150,46 +158,6 @@ export default class Level6Scene extends Phaser.Scene {
         return c
     }
 
-    createHealthBar() {
-        const h = 8
-        const segW = 15
-        const gap = 2
-        const totalW = 3 * segW + 2 * gap
-        const bg = this.add
-            .rectangle(0, 5, totalW + 6, h + 3, 0x3d7cba)
-            .setStrokeStyle(1, 0xffffff)
-
-        this.healthSegments = []
-        const startX = -totalW / 2 + segW / 2
-        for (let i = 0; i < 3; i++) {
-            const cx = startX + i * (segW + gap)
-            const seg = this.add.rectangle(cx, 5, segW, h, 0x7cfc98)
-            this.healthSegments.push(seg)
-        }
-
-        this.playerNameLabel = this.add
-            .text(0, -6, "Cluck Norris", {
-                fontSize: "10px",
-                color: "#0f3d6b"
-            })
-            .setOrigin(0.5, 1)
-
-        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 74, [
-            this.playerNameLabel,
-            bg,
-            ...this.healthSegments
-        ])
-        this.healthBarContainer.setDepth(1000)
-    }
-
-    refreshHealthBar() {
-        if (!this.healthSegments) return
-        for (let i = 0; i < 3; i++) {
-            const filled = i < this.lives
-            this.healthSegments[i].setFillStyle(filled ? 0x7cfc98 : 0x8fa8c0)
-        }
-    }
-
     updateHud() {
         this.hud.setText(`Hoops cleared: ${this.hoopsCleared} / ${this.targetHoops}`)
     }
@@ -198,7 +166,7 @@ export default class Level6Scene extends Phaser.Scene {
         const kind = this.hoopSpawnIndex % 2 === 0 ? "hope" : "peace"
         this.hoopSpawnIndex += 1
         const gapY = Phaser.Math.Between(190, 410)
-        const gapHalf = 72
+        const gapHalf = 80
         const gapTop = gapY - gapHalf
         const gapBottom = gapY + gapHalf
         const x = 1080
@@ -210,7 +178,7 @@ export default class Level6Scene extends Phaser.Scene {
         this.drawHoopRing(g, x, gapY, kind === "hope" ? 0x2ecc71 : 0x6c8cff)
 
         const label = this.add
-            .text(x, gapY + 102, kind === "hope" ? "hope" : "peace", {
+            .text(x, gapY + 114, kind === "hope" ? "hope" : "peace", {
                 fontSize: "15px",
                 color: labelColor
             })
@@ -235,12 +203,12 @@ export default class Level6Scene extends Phaser.Scene {
 
     drawHoopRing(graphics, cx, cy, color) {
         graphics.clear()
-        graphics.lineStyle(14, color, 0.4)
-        graphics.strokeCircle(cx, cy, 88)
-        graphics.lineStyle(8, color, 1)
-        graphics.strokeCircle(cx, cy, 76)
-        graphics.lineStyle(3, 0xffffff, 0.5)
-        graphics.strokeCircle(cx, cy, 82)
+        graphics.lineStyle(16, color, 0.4)
+        graphics.strokeCircle(cx, cy, 100)
+        graphics.lineStyle(9, color, 1)
+        graphics.strokeCircle(cx, cy, 86)
+        graphics.lineStyle(4, 0xffffff, 0.5)
+        graphics.strokeCircle(cx, cy, 93)
     }
 
     hitPlayer() {
@@ -329,9 +297,7 @@ export default class Level6Scene extends Phaser.Scene {
 
         if (this.isComplete || this.isGameOver) return
 
-        if (this.healthBarContainer && this.player?.active) {
-            this.healthBarContainer.setPosition(this.player.x, this.player.y - 74)
-        }
+        syncPlayerHealthBarPosition(this)
 
         if (this.heavenClouds) {
             for (const cloud of this.heavenClouds) {

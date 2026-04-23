@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
+import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level7BossMusicUrl from "../assets/level7-boss.mp3?url"
 
@@ -20,6 +21,7 @@ export default class Level7Scene extends Phaser.Scene {
             frameHeight: 150
         })
         this.load.image("level5Thought", level5ThoughtUrl)
+        this.load.image("level7Fireball", assetUrl("assets/level7-fireball.png"))
         this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
         this.load.audio("hitSound", assetUrl("assets/hit.mp3"))
         this.load.audio("quoteSound", assetUrl("assets/quote.mp3"))
@@ -101,7 +103,14 @@ export default class Level7Scene extends Phaser.Scene {
             fontSize: "21px",
             color: "#f0e8ff"
         })
-        this.createHealthBar()
+        setupPlayerHealthBar(this, {
+            yOffset: -78,
+            bgColor: 0x1a1530,
+            borderColor: 0xc090ff,
+            filledColor: 0x4ade80,
+            emptyColor: 0x4a4558,
+            labelColor: "#e8dcff"
+        })
         this.refreshHealthBar()
         this.createBossHealthBar()
         this.updateHud()
@@ -112,12 +121,18 @@ export default class Level7Scene extends Phaser.Scene {
             allowGravity: false,
             immovable: false
         })
+        this.fireballs = this.physics.add.group({
+            allowGravity: false,
+            immovable: false
+        })
+        this.nextSpawnType = "thought"
 
         this.physics.add.overlap(this.player, this.thoughts, this.touchThought, null, this)
+        this.physics.add.overlap(this.player, this.fireballs, this.touchFireball, null, this)
 
         this.spawnEvent = this.time.addEvent({
             delay: this.getSpawnDelay(),
-            callback: this.spawnThought,
+            callback: this.spawnNextHazard,
             callbackScope: this,
             loop: true
         })
@@ -131,16 +146,20 @@ export default class Level7Scene extends Phaser.Scene {
             "Bounced!"
         ]
 
-        this.lineBubble = this.add.rectangle(500, 118, 520, 52, 0x2a1a40)
+        this.lineBubble = this.add.rectangle(500, 90, 520, 52, 0x2a1a40)
             .setStrokeStyle(2, 0xc090ff)
             .setVisible(false)
+            .setDepth(1100)
 
-        this.lineText = this.add.text(500, 118, "", {
+        this.lineText = this.add.text(500, 90, "", {
             fontSize: "18px",
             color: "#f5ecff",
             align: "center",
             wordWrap: { width: 480 }
-        }).setOrigin(0.5).setVisible(false)
+        })
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setDepth(1100)
 
         if (this.cache.audio.exists("level7BossMusic")) {
             this.sound.play("level7BossMusic", { loop: true, volume: BOSS_MUSIC_VOLUME })
@@ -171,10 +190,21 @@ export default class Level7Scene extends Phaser.Scene {
         this.spawnEvent.remove(false)
         this.spawnEvent = this.time.addEvent({
             delay: this.getSpawnDelay(),
-            callback: this.spawnThought,
+            callback: this.spawnNextHazard,
             callbackScope: this,
             loop: true
         })
+    }
+
+    spawnNextHazard() {
+        if (this.isComplete || this.isGameOver) return
+        if (this.nextSpawnType === "thought") {
+            this.spawnThought()
+            this.nextSpawnType = "fireball"
+        } else {
+            this.spawnFireball()
+            this.nextSpawnType = "thought"
+        }
     }
 
     buildBoss() {
@@ -212,46 +242,6 @@ export default class Level7Scene extends Phaser.Scene {
             repeat: -1,
             ease: "sine.inOut"
         })
-    }
-
-    createHealthBar() {
-        const h = 8
-        const segW = 15
-        const gap = 2
-        const totalW = 3 * segW + 2 * gap
-        const bg = this.add
-            .rectangle(0, 5, totalW + 6, h + 3, 0x1a1530)
-            .setStrokeStyle(1, 0xc090ff)
-
-        this.healthSegments = []
-        const startX = -totalW / 2 + segW / 2
-        for (let i = 0; i < 3; i++) {
-            const cx = startX + i * (segW + gap)
-            const seg = this.add.rectangle(cx, 5, segW, h, 0x4ade80)
-            this.healthSegments.push(seg)
-        }
-
-        this.playerNameLabel = this.add
-            .text(0, -6, "Cluck Norris", {
-                fontSize: "10px",
-                color: "#e8dcff"
-            })
-            .setOrigin(0.5, 1)
-
-        this.healthBarContainer = this.add.container(this.player.x, this.player.y - 78, [
-            this.playerNameLabel,
-            bg,
-            ...this.healthSegments
-        ])
-        this.healthBarContainer.setDepth(1000)
-    }
-
-    refreshHealthBar() {
-        if (!this.healthSegments) return
-        for (let i = 0; i < 3; i++) {
-            const filled = i < this.lives
-            this.healthSegments[i].setFillStyle(filled ? 0x4ade80 : 0x4a4558)
-        }
     }
 
     createBossHealthBar() {
@@ -305,6 +295,26 @@ export default class Level7Scene extends Phaser.Scene {
         t.wobblePhase = Phaser.Math.FloatBetween(0, Math.PI * 2)
     }
 
+    spawnFireball() {
+        if (this.isComplete || this.isGameOver) return
+
+        const bx = this.bossContainer.x - 65
+        const by = this.bossContainer.y + Phaser.Math.Between(-65, 40)
+
+        const fire = this.fireballs.create(bx, by, "level7Fireball")
+        fire.setScale(0.18)
+        fire.setDepth(9)
+        fire.body.setAllowGravity(false)
+        fire.body.setSize(fire.width * 0.42, fire.height * 0.42, true)
+
+        const toPx = this.player.x - fire.x
+        const toPy = this.player.y - fire.y
+        const len = Math.sqrt(toPx * toPx + toPy * toPy) || 1
+        const speed = Phaser.Math.Between(180, 245)
+        fire.body.setVelocity((toPx / len) * speed, (toPy / len) * speed)
+        fire.spin = Phaser.Math.FloatBetween(0.04, 0.09) * (Phaser.Math.Between(0, 1) ? 1 : -1)
+    }
+
     touchThought(player, pot) {
         if (this.isComplete || this.isGameOver) return
         if (!pot.active) return
@@ -312,6 +322,28 @@ export default class Level7Scene extends Phaser.Scene {
         if (this.isKicking) return
 
         pot.destroy()
+
+        if (this.sound.get("hitSound")) {
+            this.sound.play("hitSound", { volume: 0.55 })
+        }
+
+        this.lives -= 1
+        this.refreshHealthBar()
+        this.cameras.main.flash(180, 255, 120, 120, false)
+
+        if (this.lives <= 0) {
+            this.isGameOver = true
+            if (this.spawnEvent) this.spawnEvent.remove(false)
+            this.stopBossMusic()
+            this.time.delayedCall(450, () => this.scene.restart())
+        }
+    }
+
+    touchFireball(player, fire) {
+        if (this.isComplete || this.isGameOver) return
+        if (!fire?.active) return
+
+        fire.destroy()
 
         if (this.sound.get("hitSound")) {
             this.sound.play("hitSound", { volume: 0.55 })
@@ -457,6 +489,7 @@ export default class Level7Scene extends Phaser.Scene {
 
         if (this.spawnEvent) this.spawnEvent.remove(false)
         this.thoughts.clear(true, true)
+        this.fireballs.clear(true, true)
 
         this.stopBossMusic()
 
@@ -482,9 +515,7 @@ export default class Level7Scene extends Phaser.Scene {
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
 
-        if (this.healthBarContainer && this.player?.active) {
-            this.healthBarContainer.setPosition(this.player.x, this.player.y - 78)
-        }
+        syncPlayerHealthBarPosition(this)
 
         this.thoughts.getChildren().forEach((pot) => {
             if (!pot.active) return
@@ -492,6 +523,13 @@ export default class Level7Scene extends Phaser.Scene {
             pot.y += Math.sin(pot.wobblePhase) * 0.32
             if (pot.x < -100 || pot.x > 1100) {
                 pot.destroy()
+            }
+        })
+        this.fireballs.getChildren().forEach((fire) => {
+            if (!fire.active) return
+            fire.rotation += fire.spin
+            if (fire.x < -120 || fire.x > 1120 || fire.y < -120 || fire.y > 700) {
+                fire.destroy()
             }
         })
 
@@ -565,5 +603,6 @@ export default class Level7Scene extends Phaser.Scene {
             this.player.play("flap7", true)
             this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
         }
+
     }
 }
