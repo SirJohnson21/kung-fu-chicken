@@ -3,6 +3,7 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
+import level7FireballUrl from "../assets/level7-fireball.png?url"
 import level7BossMusicUrl from "../assets/level7-boss.mp3?url"
 
 const MAX_BOSS_HP = 10
@@ -21,7 +22,7 @@ export default class Level7Scene extends Phaser.Scene {
             frameHeight: 150
         })
         this.load.image("level5Thought", level5ThoughtUrl)
-        this.load.image("level7Fireball", assetUrl("assets/level7-fireball.png"))
+        this.load.image("level7Fireball", level7FireballUrl)
         this.load.audio("kickSound", assetUrl("assets/kick.mp3"))
         this.load.audio("hitSound", assetUrl("assets/hit.mp3"))
         this.load.audio("quoteSound", assetUrl("assets/quote.mp3"))
