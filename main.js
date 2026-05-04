@@ -4,6 +4,7 @@ import FeelingScene from "./scenes/FeelingScene.js"
 import FeelingAfterScene from "./scenes/FeelingAfterScene.js"
 import TutorialScene from "./scenes/TutorialScene.js"
 import LevelSelectScene from "./scenes/LevelSelectScene.js"
+import LevelCountdownScene from "./scenes/LevelCountdownScene.js"
 import Level1Scene from "./scenes/Level1Scene.js"
 import Level2Scene from "./scenes/Level2Scene.js"
 import Level3Scene from "./scenes/Level3Scene.js"
@@ -38,6 +39,7 @@ const config = {
         FeelingAfterScene,
         TutorialScene,
         LevelSelectScene,
+        LevelCountdownScene,
         Level1Scene,
         Level2Scene,
         Level3Scene,

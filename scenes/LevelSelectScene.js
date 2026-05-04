@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
+import { startLevelWithCountdown } from "../utils/startLevelWithCountdown.js"
 import levelSelectBgmUrl from "../assets/level-select-bgm.mp3?url"
 
 const LEVELS = [
@@ -7,8 +8,8 @@ const LEVELS = [
     { key: "Level1Scene", title: "Level 1", blurb: "Eggs & kicks on the farm" },
     { key: "Level2Scene", title: "Level 2", blurb: "Office positivity" },
     { key: "Level3Scene", title: "Level 3", blurb: "Egg Hoop bonus" },
-    { key: "Level4Scene", title: "Level 4", blurb: "Atari positivity flow" },
-    { key: "Level5Scene", title: "Level 5", blurb: "Kick the bad thoughts" },
+    { key: "Level4Scene", title: "Level 4", blurb: "Sumo-ring positivity flow" },
+    { key: "Level5Scene", title: "Level 5", blurb: "Subway platform — kick bad thoughts" },
     { key: "Level6Scene", title: "Level 6", blurb: "Flow of hope & peace" },
     { key: "Level7Scene", title: "Level 7", blurb: "The Big Doubt — final boss" }
 ]
@@ -134,7 +135,7 @@ export default class LevelSelectScene extends Phaser.Scene {
     startLevel(index) {
         const lvl = LEVELS[index]
         if (!lvl) return
-        this.scene.start(lvl.key)
+        startLevelWithCountdown(this, lvl.key)
     }
 
     update() {

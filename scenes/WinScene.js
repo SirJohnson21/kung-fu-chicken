@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { startLevelWithCountdown } from "../utils/startLevelWithCountdown.js"
 
 export default class WinScene extends Phaser.Scene {
     constructor() {
@@ -132,7 +133,7 @@ export default class WinScene extends Phaser.Scene {
         }
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("Level2Scene")
+            startLevelWithCountdown(this, "Level2Scene")
         })
     }
 }

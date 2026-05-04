@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
 
 export default class TutorialScene extends Phaser.Scene {
     constructor() {
@@ -48,13 +49,6 @@ export default class TutorialScene extends Phaser.Scene {
             key: "tut_run",
             frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
-            repeat: -1
-        })
-
-        this.anims.create({
-            key: "tut_flap",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
-            frameRate: 14,
             repeat: -1
         })
 
@@ -152,6 +146,8 @@ export default class TutorialScene extends Phaser.Scene {
                 if (this.player.body.blocked.down || this.player.body.touching.down) {
                     this.player.anims.stop()
                     this.player.setFrame(0)
+                } else {
+                    setPlayerAirborneVisual(this.player)
                 }
             })
 
@@ -192,17 +188,14 @@ export default class TutorialScene extends Phaser.Scene {
                 this.player.setVelocityY(-420)
                 if (justJumped) {
                     this.flags.jump = true
-                    this.player.setFrame(3)
                     this.player.setAngle(-10)
-                    this.player.play("tut_flap", true)
+                    setPlayerAirborneVisual(this.player)
                 }
             }
 
             if (!onGround) {
                 this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
-                if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "tut_flap") {
-                    this.player.play("tut_flap", true)
-                }
+                setPlayerAirborneVisual(this.player)
             }
         }
 

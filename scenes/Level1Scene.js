@@ -3,6 +3,8 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
+import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
+import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
 import level1BgmUrl from "../assets/level1-bgm.m4a?url"
 
 export default class Level1Scene extends Phaser.Scene {
@@ -47,13 +49,6 @@ export default class Level1Scene extends Phaser.Scene {
             key: "run",
             frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
-            repeat: -1
-        })
-
-        this.anims.create({
-            key: "flap",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
-            frameRate: 14,
             repeat: -1
         })
 
@@ -191,7 +186,7 @@ export default class Level1Scene extends Phaser.Scene {
         const enemyIsLeft = this.enemy.x < this.player.x
         const enemyIsRight = this.enemy.x > this.player.x
 
-        if (distance < 90) {
+        if (distance <= PLAYER_KICK_RANGE_PX) {
             if (this.player.flipX && enemyIsLeft) {
                 this.enemy.x -= 120
                 this.enemy.body.setVelocityX(0)
@@ -250,10 +245,11 @@ export default class Level1Scene extends Phaser.Scene {
             this.time.delayedCall(180, () => {
                 this.isKicking = false
                 this.player.setAngle(0)
-                // Restore a sane default pose immediately after the kick ends.
                 if (this.player.body.blocked.down || this.player.body.touching.down) {
                     this.player.anims.stop()
                     this.player.setFrame(0)
+                } else {
+                    setPlayerAirborneVisual(this.player)
                 }
             })
 
@@ -292,18 +288,14 @@ export default class Level1Scene extends Phaser.Scene {
             if (this.cursors.up.isDown && onGround) {
                 this.player.setVelocityY(-420)
                 if (justJumped) {
-                    // Make the jump look immediate instead of waiting a frame for airborne state.
-                    this.player.setFrame(3)
                     this.player.setAngle(-10)
-                    this.player.play("flap", true)
+                    setPlayerAirborneVisual(this.player)
                 }
             }
 
             if (!onGround) {
-                // Simple "going up / coming down" pose by tilting the sprite.
                 this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
-
-                if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap") this.player.play("flap", true)
+                setPlayerAirborneVisual(this.player)
             }
         }
     }

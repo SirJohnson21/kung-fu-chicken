@@ -16,9 +16,9 @@ A 2D platformer game built with [Phaser 3](https://phaser.io/) and [Vite](https:
 - **Menu** → Press **SPACE** to start
 - **Level 1** → Collect 3 eggs while avoiding the enemy. Kick with **X** to push enemies away (face them first!).
 - **Level 2 (Office Positivity)** → Collect 3 motivational quotes and 1 egg on the desk. Same kick mechanic.
-- **Level 3 (Egg Hoop!)** → Bonus basketball mini-game. Shoot eggs through the hoop — make 3 shots to win!
-- **Level 4 (Atari Positivity Flow)** → Collect positivity (green eggs) as they flow in. Avoid negativity (red stress blobs) and kick with **X**. Continue to Level 5 when you win.
-- **Level 5 (Kick the Bad Thoughts)** → Bad thoughts drift in as little grease buckets. Kick them away (face them first!) before they get you — 3 lives. Random cheer lines on each successful kick. Then **SPACE** on the win screen for the menu.
+- **Level 3 (Egg Hoop!)** → Bonus basketball mini-game. Shoot eggs through the hoop — make 5 shots to win!
+- **Level 4 (Positivity Flow)** → Sumo-ring (dohyō) styled arena. Collect **15** positivity orbs (green-tinted eggs) as they flow in. Avoid negativity (stress blobs) and kick with **X**. Continue to Level 5 when you win.
+- **Level 5 (Kick the Bad Thoughts)** → Subway platform vibe. Bad thoughts drift in as little grease buckets. Kick them away (face them first!) before they get you — 3 lives. Random cheer lines on each successful kick. Then **SPACE** on the win screen for the menu.
 
 ### Tips
 - Don't touch enemies unless you're kicking — contact = game over (level restart).

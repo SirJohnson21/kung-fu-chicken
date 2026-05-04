@@ -2,11 +2,13 @@ import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
+import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
+import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level7FireballUrl from "../assets/level7-fireball.png?url"
 import level7BossMusicUrl from "../assets/level7-boss.mp3?url"
 
-const MAX_BOSS_HP = 10
+const MAX_BOSS_HP = 5
 
 /** BGM loudness — tweak if the track feels hot or quiet next to SFX */
 const BOSS_MUSIC_VOLUME = 0.3
@@ -31,37 +33,35 @@ export default class Level7Scene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor("#12081c")
+        this.cameras.main.setBackgroundColor("#0c0e12")
 
-        this.add.rectangle(500, 300, 1000, 600, 0x1a0d28).setDepth(-10)
-        for (let i = 0; i < 20; i++) {
-            const s = Phaser.Math.FloatBetween(1, 2.5)
-            const st = this.add.circle(
-                Phaser.Math.Between(0, 1000),
-                Phaser.Math.Between(0, 320),
-                s,
-                0x6a4a9e,
-                0.35
-            )
-            st.setDepth(-9)
-        }
+        this.buildDungeonBackdrop()
 
         this.add.text(20, 16, "LEVEL 7: THE BIG DOUBT", {
             fontSize: "26px",
-            color: "#e8d4ff"
-        })
+            color: "#dce4f0",
+            stroke: "#0a0c10",
+            strokeThickness: 4
+        }).setDepth(30)
 
-        this.add.text(20, 46, "Kick doubts into the boss — don’t get hit — ESC — level select", {
-            fontSize: "17px",
-            color: "#b8a0d8"
-        })
+        this.add
+            .text(20, 46, "Deep in the dungeon — kick doubts into the boss — don’t get hit — ESC — level select", {
+                fontSize: "16px",
+                color: "#9aa8bc",
+                stroke: "#0a0c10",
+                strokeThickness: 3,
+                wordWrap: { width: 720 }
+            })
+            .setDepth(30)
 
-        this.ground = this.add.rectangle(500, 570, 1000, 60, 0x2d1f3d)
+        this.ground = this.add.rectangle(500, 570, 1000, 60, 0x262d38)
         this.physics.add.existing(this.ground, true)
+        this.ground.setDepth(2)
 
         this.player = this.physics.add.sprite(340, 450, "chicken", 0)
         this.player.setScale(0.72)
         this.player.setCollideWorldBounds(true)
+        this.player.setDepth(14)
         this.physics.add.collider(this.player, this.ground)
 
         this.cursors = this.input.keyboard.createCursorKeys()
@@ -71,13 +71,6 @@ export default class Level7Scene extends Phaser.Scene {
             key: "run7",
             frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
-            repeat: -1
-        })
-
-        this.anims.create({
-            key: "flap7",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
-            frameRate: 14,
             repeat: -1
         })
 
@@ -100,17 +93,21 @@ export default class Level7Scene extends Phaser.Scene {
         this.bossHp = MAX_BOSS_HP
         this.lives = 3
 
-        this.hud = this.add.text(20, 78, "", {
-            fontSize: "21px",
-            color: "#f0e8ff"
-        })
+        this.hud = this.add
+            .text(20, 78, "", {
+                fontSize: "21px",
+                color: "#e8eef8",
+                stroke: "#0a0c10",
+                strokeThickness: 3
+            })
+            .setDepth(30)
         setupPlayerHealthBar(this, {
             yOffset: -78,
-            bgColor: 0x1a1530,
-            borderColor: 0xc090ff,
+            bgColor: 0x161a22,
+            borderColor: 0x6b7c93,
             filledColor: 0x4ade80,
-            emptyColor: 0x4a4558,
-            labelColor: "#e8dcff"
+            emptyColor: 0x3a404c,
+            labelColor: "#dce4f0"
         })
         this.refreshHealthBar()
         this.createBossHealthBar()
@@ -147,14 +144,14 @@ export default class Level7Scene extends Phaser.Scene {
             "Bounced!"
         ]
 
-        this.lineBubble = this.add.rectangle(500, 90, 520, 52, 0x2a1a40)
-            .setStrokeStyle(2, 0xc090ff)
+        this.lineBubble = this.add.rectangle(500, 90, 520, 52, 0x1e2430, 0.96)
+            .setStrokeStyle(2, 0x5c6d82, 1)
             .setVisible(false)
             .setDepth(1100)
 
         this.lineText = this.add.text(500, 90, "", {
             fontSize: "18px",
-            color: "#f5ecff",
+            color: "#eef2fa",
             align: "center",
             wordWrap: { width: 480 }
         })
@@ -180,10 +177,11 @@ export default class Level7Scene extends Phaser.Scene {
     }
 
     getSpawnDelay() {
-        let d = 2100
-        if (this.bossHp <= 5) d *= 0.72
-        if (this.bossHp <= 2) d *= 0.65
-        return Math.max(720, Math.floor(d))
+        let d = 2900
+        if (this.bossHp <= 3) d *= 0.88
+        if (this.bossHp <= 2) d *= 0.82
+        if (this.bossHp <= 1) d *= 0.78
+        return Math.max(980, Math.floor(d))
     }
 
     refreshSpawnRate() {
@@ -206,6 +204,121 @@ export default class Level7Scene extends Phaser.Scene {
             this.spawnFireball()
             this.nextSpawnType = "thought"
         }
+    }
+
+    buildDungeonBackdrop() {
+        const back = this.add.graphics().setDepth(-24)
+        back.fillStyle(0x0e1016, 1)
+        back.fillRect(0, 0, 1000, 600)
+
+        const blockW = 62
+        const blockH = 42
+        for (let row = 0, y = 0; y < 340; row++, y += blockH) {
+            const offset = (row % 2) * (blockW * 0.5)
+            for (let x = -blockW; x < 1000 + blockW; x += blockW) {
+                const bx = Math.floor(x + offset)
+                const shades = [0x262b35, 0x2e3440, 0x22272f, 0x323846]
+                const c = shades[(row + Math.floor(bx / blockW)) % shades.length]
+                back.fillStyle(c, 1)
+                back.fillRect(bx, y, blockW - 3, blockH - 3)
+                back.lineStyle(1, 0x0a0c12, 0.9)
+                back.strokeRect(bx, y, blockW - 3, blockH - 3)
+            }
+        }
+
+        back.fillStyle(0x060708, 0.94)
+        back.fillRect(0, 0, 1000, 64)
+
+        back.fillStyle(0x2a2218, 1)
+        back.fillRect(0, 48, 1000, 12)
+        back.fillStyle(0x1a1510, 1)
+        back.fillRect(0, 58, 1000, 8)
+
+        const pillar = (px) => {
+            back.fillStyle(0x141820, 1)
+            back.fillRect(px, 0, 64, 540)
+            back.fillStyle(0x2a323e, 0.45)
+            back.fillRect(px + 10, 90, 12, 380)
+            back.lineStyle(2, 0x050608, 1)
+            back.strokeRect(px, 0, 64, 540)
+        }
+        pillar(0)
+        pillar(936)
+
+        const sconce = this.add.graphics().setDepth(-18)
+        const drawTorch = (tx, ty) => {
+            sconce.fillStyle(0x1c1410, 1)
+            sconce.fillRect(tx - 6, ty - 4, 12, 18)
+            sconce.fillStyle(0x3a3028, 1)
+            sconce.fillTriangle(tx - 14, ty + 14, tx + 14, ty + 14, tx, ty + 4)
+        }
+        drawTorch(108, 168)
+        drawTorch(892, 188)
+
+        const glow = this.add.graphics().setDepth(-17)
+        glow.fillStyle(0xff8c32, 0.14)
+        glow.fillEllipse(108, 158, 130, 150)
+        glow.fillStyle(0xffb347, 0.1)
+        glow.fillEllipse(108, 158, 72, 92)
+        glow.fillStyle(0xff8c32, 0.12)
+        glow.fillEllipse(892, 176, 118, 138)
+        glow.fillStyle(0xffb347, 0.08)
+        glow.fillEllipse(892, 176, 68, 88)
+
+        const chains = this.add.graphics().setDepth(-16)
+        chains.lineStyle(3, 0x1a1e26, 0.85)
+        for (let c = 0; c < 3; c++) {
+            const cx = 220 + c * 280
+            let cy = 52
+            for (let k = 0; k < 14; k++) {
+                chains.strokeCircle(cx + (k % 2) * 3, cy, 5)
+                cy += 11
+            }
+        }
+
+        const gate = this.add.graphics().setDepth(-15)
+        gate.fillStyle(0x0a0c10, 0.55)
+        gate.fillRect(300, 95, 400, 245)
+        gate.lineStyle(5, 0x1f252e, 0.95)
+        gate.strokeRect(302, 97, 396, 241)
+        gate.lineStyle(4, 0x2c3542, 0.75)
+        for (let i = 0; i < 9; i++) {
+            const gx = 318 + i * 44
+            gate.beginPath()
+            gate.moveTo(gx, 104)
+            gate.lineTo(gx, 328)
+            gate.strokePath()
+        }
+
+        const floor = this.add.graphics().setDepth(-10)
+        for (let fy = 360; fy < 540; fy += 28) {
+            for (let fx = 0; fx < 1000; fx += 48) {
+                const stagger = (fy / 28) % 2 === 0 ? 0 : 24
+                const fc = [0x1c222c, 0x232a34, 0x181d24][(fx + fy) % 3]
+                floor.fillStyle(fc, 1)
+                floor.fillRect(fx + stagger, fy, 44, 24)
+                floor.lineStyle(1, 0x0a0d12, 0.65)
+                floor.strokeRect(fx + stagger, fy, 44, 24)
+            }
+        }
+
+        const mist = this.add.graphics().setDepth(-6)
+        mist.fillStyle(0x0a0c12, 0.22)
+        mist.fillRect(0, 420, 1000, 120)
+        mist.fillStyle(0x000000, 0.18)
+        mist.fillEllipse(200, 520, 420, 100)
+        mist.fillEllipse(780, 530, 480, 110)
+
+        this.add
+            .text(500, 128, "ABANDON HOPE\nYE WHO ENTER", {
+                fontSize: "15px",
+                color: "#3d4654",
+                align: "center",
+                lineSpacing: 4
+            })
+            .setOrigin(0.5)
+            .setAlpha(0.55)
+            .setDepth(-5)
     }
 
     buildBoss() {
@@ -249,8 +362,8 @@ export default class Level7Scene extends Phaser.Scene {
         const w = 320
         const h = 14
         this.bossHpBg = this.add
-            .rectangle(500, 36, w + 8, h + 8, 0x1f1230)
-            .setStrokeStyle(2, 0x8b5cf6)
+            .rectangle(500, 36, w + 8, h + 8, 0x161a22)
+            .setStrokeStyle(2, 0x8b5cf6, 1)
             .setDepth(50)
         this.bossHpFill = this.add.rectangle(500 - w / 2, 36, w, h, 0xa855f7).setOrigin(0, 0.5).setDepth(51)
         this.bossHpLabel = this.add
@@ -290,7 +403,7 @@ export default class Level7Scene extends Phaser.Scene {
         const toPx = this.player.x - t.x
         const toPy = this.player.y - t.y
         const len = Math.sqrt(toPx * toPx + toPy * toPy) || 1
-        const speed = Phaser.Math.Between(52, 92)
+        const speed = Phaser.Math.Between(34, 58)
         t.body.setVelocity((toPx / len) * speed, (toPy / len) * speed)
 
         t.wobblePhase = Phaser.Math.FloatBetween(0, Math.PI * 2)
@@ -311,7 +424,7 @@ export default class Level7Scene extends Phaser.Scene {
         const toPx = this.player.x - fire.x
         const toPy = this.player.y - fire.y
         const len = Math.sqrt(toPx * toPx + toPy * toPy) || 1
-        const speed = Phaser.Math.Between(180, 245)
+        const speed = Phaser.Math.Between(105, 145)
         fire.body.setVelocity((toPx / len) * speed, (toPy / len) * speed)
         fire.spin = Phaser.Math.FloatBetween(0.04, 0.09) * (Phaser.Math.Between(0, 1) ? 1 : -1)
     }
@@ -363,7 +476,6 @@ export default class Level7Scene extends Phaser.Scene {
     }
 
     tryKickThoughts() {
-        const range = 135
         const push = 480
 
         let hitCount = 0
@@ -371,7 +483,7 @@ export default class Level7Scene extends Phaser.Scene {
             if (!pot.active || pot.kicked) return
 
             const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, pot.x, pot.y)
-            if (d > range) return
+            if (d > PLAYER_KICK_RANGE_PX) return
 
             const potLeft = pot.x < this.player.x
             const potRight = pot.x > this.player.x
@@ -515,6 +627,7 @@ export default class Level7Scene extends Phaser.Scene {
         if (goToLevelSelectIfEsc(this)) return
 
         const onGround = this.player.body.blocked.down || this.player.body.touching.down
+        const justJumped = Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround
 
         syncPlayerHealthBarPosition(this)
 
@@ -561,7 +674,7 @@ export default class Level7Scene extends Phaser.Scene {
                     this.player.anims.stop()
                     this.player.setFrame(0)
                 } else {
-                    this.player.play("flap7", true)
+                    setPlayerAirborneVisual(this.player)
                 }
             })
 
@@ -595,14 +708,15 @@ export default class Level7Scene extends Phaser.Scene {
 
         if (this.cursors.up.isDown && onGround) {
             this.player.setVelocityY(-420)
-            this.player.setFrame(3)
-            this.player.play("flap7", true)
-            this.player.setAngle(-10)
+            if (justJumped) {
+                this.player.setAngle(-10)
+                setPlayerAirborneVisual(this.player)
+            }
         }
 
         if (!onGround) {
-            this.player.play("flap7", true)
             this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
+            setPlayerAirborneVisual(this.player)
         }
 
     }

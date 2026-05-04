@@ -3,6 +3,8 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
+import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
+import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
 import level2BgmUrl from "../assets/level2-bgm.m4a?url"
 
 export default class Level2Scene extends Phaser.Scene {
@@ -28,35 +30,52 @@ export default class Level2Scene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor("#d9e6f2")
+        this.cameras.main.setBackgroundColor("#1a2332")
 
-        this.add.text(20, 20, "LEVEL 2: Office Positivity", {
+        this.buildLevel2OfficeBackdrop()
+        this.drawLevel2CarpetAndTrim()
+
+        const hudTitle = {
             fontSize: "28px",
-            color: "#222222"
-        })
+            color: "#f8fafc",
+            stroke: "#0f172a",
+            strokeThickness: 5
+        }
+        const hudSub = {
+            fontSize: "18px",
+            color: "#e2e8f0",
+            stroke: "#0f172a",
+            strokeThickness: 3,
+            wordWrap: { width: 760 }
+        }
+        const hudScore = {
+            fontSize: "24px",
+            color: "#fef9c3",
+            stroke: "#0f172a",
+            strokeThickness: 4
+        }
 
-        this.add.text(20, 55, "Collect quotes and eggs | Avoid stress | X kick | ESC — level select", {
-            fontSize: "20px",
-            color: "#444444"
-        })
+        this.add.text(20, 20, "LEVEL 2: Office Positivity", hudTitle).setDepth(26)
 
-        this.ground = this.add.rectangle(500, 570, 1000, 60, 0x8b6b4a)
+        this.add
+            .text(20, 52, "Collect quotes and eggs | Avoid stress | X kick | ESC — level select", hudSub)
+            .setDepth(26)
+
+        this.ground = this.add.rectangle(500, 570, 1000, 60, 0x9ca3af)
         this.physics.add.existing(this.ground, true)
+        this.ground.setDepth(1)
 
         this.platforms = this.physics.add.staticGroup()
-        const deskPlatform = this.add.rectangle(700, 455, 140, 20, 0x555555)
+        const deskPlatform = this.add.rectangle(700, 455, 140, 20, 0xffffff, 0)
         this.physics.add.existing(deskPlatform, true)
         this.platforms.add(deskPlatform)
 
-        this.leftDesk = this.add.rectangle(160, 470, 140, 70, 0x777777)
-        this.rightDesk = this.add.rectangle(700, 470, 140, 70, 0x777777)
-
-        this.add.rectangle(160, 420, 70, 40, 0x99ccff)
-        this.add.rectangle(700, 420, 70, 40, 0x99ccff)
+        this.drawLevel2Workstations()
 
         this.player = this.physics.add.sprite(100, 450, "chicken", 0)
         this.player.setScale(0.85)
         this.player.setCollideWorldBounds(true)
+        this.player.setDepth(12)
 
         this.physics.add.collider(this.player, this.ground)
         this.physics.add.collider(this.player, this.platforms)
@@ -68,13 +87,6 @@ export default class Level2Scene extends Phaser.Scene {
             key: "run2",
             frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
-            repeat: -1
-        })
-
-        this.anims.create({
-            key: "flap2",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
-            frameRate: 14,
             repeat: -1
         })
 
@@ -97,46 +109,50 @@ export default class Level2Scene extends Phaser.Scene {
 
         setupPlayerHealthBar(this, {
             yOffset: -80,
-            bgColor: 0xf0f4f8,
-            borderColor: 0x444444,
+            bgColor: 0x1e293b,
+            borderColor: 0x64748b,
             filledColor: 0x22c55e,
-            emptyColor: 0xb8c4ce,
-            labelColor: "#1a1a1a"
+            emptyColor: 0x475569,
+            labelColor: "#e2e8f0"
         })
         this.refreshHealthBar()
 
         this.itemsCollected = 0
         this.totalItems = 4
 
-        this.itemCounter = this.add.text(20, 90, "Collected: 0 / 4", {
-            fontSize: "24px",
-            color: "#222222"
-        })
+        this.itemCounter = this.add.text(20, 92, "Collected: 0 / 4", hudScore).setDepth(26)
 
         this.quotePickups = this.physics.add.staticGroup()
 
         const quote1 = this.quotePickups.create(260, 525, null)
         quote1.setSize(40, 40)
         quote1.setVisible(false)
-        quote1.visual = this.add.rectangle(260, 525, 36, 36, 0xffffff).setStrokeStyle(2, 0x222222)
-        quote1.mark = this.add.text(252, 512, '"', { fontSize: "28px", color: "#222222" })
+        quote1.visual = this.add.rectangle(260, 525, 40, 40, 0xfef3c7).setStrokeStyle(2, 0xd97706).setDepth(5)
+        quote1.mark = this.add
+            .text(252, 512, '"', { fontSize: "28px", color: "#92400e", stroke: "#fffbeb", strokeThickness: 2 })
+            .setDepth(6)
 
         const quote2 = this.quotePickups.create(520, 525, null)
         quote2.setSize(40, 40)
         quote2.setVisible(false)
-        quote2.visual = this.add.rectangle(520, 525, 36, 36, 0xffffff).setStrokeStyle(2, 0x222222)
-        quote2.mark = this.add.text(512, 512, '"', { fontSize: "28px", color: "#222222" })
+        quote2.visual = this.add.rectangle(520, 525, 40, 40, 0xfef3c7).setStrokeStyle(2, 0xd97706).setDepth(5)
+        quote2.mark = this.add
+            .text(512, 512, '"', { fontSize: "28px", color: "#92400e", stroke: "#fffbeb", strokeThickness: 2 })
+            .setDepth(6)
 
         const quote3 = this.quotePickups.create(810, 525, null)
         quote3.setSize(40, 40)
         quote3.setVisible(false)
-        quote3.visual = this.add.rectangle(810, 525, 36, 36, 0xffffff).setStrokeStyle(2, 0x222222)
-        quote3.mark = this.add.text(802, 512, '"', { fontSize: "28px", color: "#222222" })
+        quote3.visual = this.add.rectangle(810, 525, 40, 40, 0xfef3c7).setStrokeStyle(2, 0xd97706).setDepth(5)
+        quote3.mark = this.add
+            .text(802, 512, '"', { fontSize: "28px", color: "#92400e", stroke: "#fffbeb", strokeThickness: 2 })
+            .setDepth(6)
 
         this.physics.add.overlap(this.player, this.quotePickups, this.collectQuote, null, this)
 
         this.deskEgg = this.physics.add.staticSprite(700, 390, "egg")
         this.deskEgg.setScale(0.06).refreshBody()
+        this.deskEgg.setDepth(8)
 
         this.tweens.add({
             targets: this.deskEgg,
@@ -149,16 +165,16 @@ export default class Level2Scene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, this.deskEgg, this.collectDeskEgg, null, this)
 
-        this.quoteBubble = this.add.rectangle(0, 0, 220, 60, 0xffffff)
-            .setStrokeStyle(2, 0x222222)
+        this.quoteBubble = this.add.rectangle(0, 0, 240, 64, 0xfefce8, 0.97)
+            .setStrokeStyle(2, 0x78716c, 1)
             .setVisible(false)
             .setDepth(1100)
 
         this.quoteText = this.add.text(0, 0, "", {
             fontSize: "18px",
-            color: "#222222",
+            color: "#292524",
             align: "center",
-            wordWrap: { width: 200 }
+            wordWrap: { width: 216 }
         })
             .setOrigin(0.5)
             .setVisible(false)
@@ -172,6 +188,7 @@ export default class Level2Scene extends Phaser.Scene {
 
         this.enemy = this.physics.add.sprite(620, 530, "enemy")
         this.enemy.setScale(0.08)
+        this.enemy.setDepth(10)
         this.enemy.setCollideWorldBounds(true)
         this.enemy.body.setAllowGravity(false)
         this.enemy.body.setImmovable(true)
@@ -195,6 +212,131 @@ export default class Level2Scene extends Phaser.Scene {
 
         playLevelBgm(this, "level2Bgm")
         registerLevelBgmShutdown(this, "level2Bgm")
+    }
+
+    buildLevel2OfficeBackdrop() {
+        const g = this.add.graphics().setDepth(-20)
+
+        g.fillStyle(0x243044, 1)
+        g.fillRect(0, 0, 1000, 76)
+
+        const lights = [
+            [90, 28, 260, 16],
+            [400, 26, 220, 15],
+            [660, 30, 250, 16]
+        ]
+        for (const [lx, ly, lw, lh] of lights) {
+            g.fillStyle(0xfffbeb, 0.4)
+            g.fillRect(lx, ly, lw, lh)
+            g.fillStyle(0xffffff, 0.12)
+            g.fillRect(lx + 3, ly + 3, lw - 6, lh - 5)
+        }
+
+        g.fillStyle(0xe2e8f0, 1)
+        g.fillRect(0, 76, 1000, 448)
+
+        g.lineStyle(1, 0xcbd5e1, 0.85)
+        for (let x = 0; x <= 1000; x += 96) {
+            g.lineBetween(x, 76, x, 510)
+        }
+
+        g.fillStyle(0xbfdbfe, 0.35)
+        g.fillRect(40, 120, 220, 140)
+        g.fillRect(380, 100, 200, 120)
+        g.fillRect(720, 130, 200, 130)
+        g.lineStyle(2, 0x94a3b8, 0.65)
+        g.strokeRect(40, 120, 220, 140)
+        g.strokeRect(380, 100, 200, 120)
+        g.strokeRect(720, 130, 200, 130)
+
+        g.fillStyle(0x475569, 0.25)
+        for (let i = 0; i < 5; i++) {
+            g.fillRect(52 + i * 44, 135, 28, 110)
+            g.fillRect(392 + i * 38, 115, 24, 92)
+            g.fillRect(732 + i * 38, 145, 24, 98)
+        }
+
+        g.fillStyle(0x1e293b, 1)
+        g.fillRect(0, 500, 1000, 44)
+
+        this.add
+            .text(500, 42, "OPEN FLOOR PLAN — please keep positivity stocked", {
+                fontSize: "13px",
+                color: "#64748b",
+                fontStyle: "italic"
+            })
+            .setOrigin(0.5)
+            .setAlpha(0.55)
+            .setDepth(-2)
+    }
+
+    drawLevel2CarpetAndTrim() {
+        const carpet = this.add.graphics().setDepth(2)
+        const top = 540
+        for (let y = top; y < 602; y += 6) {
+            const alt = ((y - top) / 6) % 2 === 0
+            carpet.fillStyle(alt ? 0x8b92a0 : 0x949aa8, 0.55)
+            carpet.fillRect(0, y, 1000, 6)
+        }
+        carpet.lineStyle(1, 0x6b7280, 0.35)
+        for (let x = 0; x < 1000; x += 48) {
+            carpet.lineBetween(x, top, x + 22, 598)
+        }
+
+        const trim = this.add.graphics().setDepth(3)
+        trim.lineStyle(4, 0xf1f5f9, 0.9)
+        trim.lineBetween(0, 536, 1000, 536)
+        trim.lineStyle(2, 0xe2e8f0, 0.75)
+        trim.lineBetween(18, 508, 18, 598)
+        trim.lineBetween(982, 508, 982, 598)
+    }
+
+    drawLevel2Workstations() {
+        const d = this.add.graphics().setDepth(4)
+
+        const drawDesk = (cx, cy, w, h, wood) => {
+            const x = cx - w / 2
+            const yTop = cy - h / 2
+            d.fillStyle(0x334155, 1)
+            d.fillRect(x + 18, yTop + 18, 16, h - 18)
+            d.fillRect(x + w - 34, yTop + 18, 16, h - 18)
+            d.fillStyle(0x1e293b, 1)
+            d.fillRect(x + 8, yTop + h - 26, w - 16, 22)
+            d.fillStyle(wood, 1)
+            d.fillRect(x, yTop, w, 22)
+            d.lineStyle(2, 0x78350f, 0.55)
+            d.strokeRect(x, yTop, w, 22)
+        }
+
+        drawDesk(160, 470, 150, 72, 0xc4a574)
+        drawDesk(700, 470, 150, 72, 0xb8956a)
+
+        d.fillStyle(0xa16207, 1)
+        d.fillRect(630, 445, 140, 20)
+        d.lineStyle(2, 0x713f12, 0.75)
+        d.strokeRect(630, 445, 140, 20)
+
+        const drawMonitor = (cx, my) => {
+            const mw = 76
+            const mh = 48
+            const mx = cx - mw / 2
+            const myTop = my - mh / 2
+            d.fillStyle(0x0f172a, 1)
+            d.fillRect(mx - 4, myTop - 4, mw + 8, mh + 8)
+            d.fillStyle(0x7dd3fc, 0.95)
+            d.fillRect(mx, myTop, mw, mh)
+            d.fillStyle(0xffffff, 0.2)
+            d.fillRect(mx + 4, myTop + 4, mw - 14, 12)
+            d.lineStyle(2, 0x334155, 1)
+            d.strokeRect(mx - 4, myTop - 4, mw + 8, mh + 8)
+            d.fillStyle(0x475569, 1)
+            d.fillRect(cx - 16, myTop + mh + 4, 32, 10)
+            d.fillStyle(0x64748b, 1)
+            d.fillRect(cx - 28, myTop + mh + 12, 56, 6)
+        }
+
+        drawMonitor(160, 420)
+        drawMonitor(700, 420)
     }
 
     collectQuote(player, pickup) {
@@ -305,7 +447,7 @@ export default class Level2Scene extends Phaser.Scene {
         const enemyIsLeft = this.enemy.x < this.player.x
         const enemyIsRight = this.enemy.x > this.player.x
 
-        if (distance < 90) {
+        if (distance <= PLAYER_KICK_RANGE_PX) {
             if (this.player.flipX && enemyIsLeft) {
                 this.enemy.x -= 120
                 this.enemy.body.setVelocityX(0)
@@ -367,6 +509,8 @@ export default class Level2Scene extends Phaser.Scene {
                 if (this.player.body.blocked.down || this.player.body.touching.down) {
                     this.player.anims.stop()
                     this.player.setFrame(0)
+                } else {
+                    setPlayerAirborneVisual(this.player)
                 }
             })
 
@@ -405,17 +549,14 @@ export default class Level2Scene extends Phaser.Scene {
             if (this.cursors.up.isDown && onGround) {
                 this.player.setVelocityY(-420)
                 if (justJumped) {
-                    // Make the jump look immediate instead of waiting a frame for airborne state.
-                    this.player.setFrame(3)
                     this.player.setAngle(-10)
-                    this.player.play("flap2", true)
+                    setPlayerAirborneVisual(this.player)
                 }
             }
 
             if (!onGround) {
-                // Pose tilt to make jumping/falling readable.
                 this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
-                if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== "flap2") this.player.play("flap2", true)
+                setPlayerAirborneVisual(this.player)
             }
         }
 

@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { addBasketballHoopVisual } from "../utils/basketballHoop.js"
+import { startLevelWithCountdown } from "../utils/startLevelWithCountdown.js"
 
 export default class Level3WinScene extends Phaser.Scene {
     constructor() {
@@ -142,7 +143,7 @@ export default class Level3WinScene extends Phaser.Scene {
             this.canGoToLevel4 &&
             Phaser.Input.Keyboard.JustDown(this.spaceKey)
         ) {
-            this.scene.start("Level4Scene")
+            startLevelWithCountdown(this, "Level4Scene")
         }
     }
 }

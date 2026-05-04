@@ -1,5 +1,7 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
+import { startLevelWithCountdown } from "../utils/startLevelWithCountdown.js"
+import { addLevel4SumoRingGraphics, addLevel4SumoBannerText } from "../utils/level4SumoBackdrop.js"
 
 export default class Level4WinScene extends Phaser.Scene {
     constructor() {
@@ -15,36 +17,47 @@ export default class Level4WinScene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor("#040016")
+        this.cameras.main.setBackgroundColor("#2a1810")
 
-        // Scanlines + subtle grid (cheap Atari effect)
-        this.drawAtariBackground()
+        addLevel4SumoRingGraphics(this)
+        addLevel4SumoBannerText(this, "Victory on the clay")
 
         this.add
             .text(500, 110, "POSITIVITY OVERFLOW!", {
                 fontSize: "48px",
-                color: "#00ffcc"
+                color: "#fef3c7",
+                stroke: "#450a0a",
+                strokeThickness: 6
             })
             .setOrigin(0.5)
+            .setDepth(10)
 
         this.add
-            .text(500, 190, "You kept the vibe clean. Kick the stress!"
-                , {
-                    fontSize: "26px",
-                    color: "#b7fff1"
-                })
+            .text(500, 190, "You kept the vibe clean. Kick the stress!", {
+                fontSize: "26px",
+                color: "#fde68a",
+                stroke: "#431407",
+                strokeThickness: 3,
+                align: "center",
+                wordWrap: { width: 720 }
+            })
             .setOrigin(0.5)
+            .setDepth(10)
 
         this.add
             .text(500, 520, "Press SPACE for Level 5", {
                 fontSize: "24px",
-                color: "#eaffff"
+                color: "#fffbeb",
+                stroke: "#451a03",
+                strokeThickness: 3
             })
             .setOrigin(0.5)
+            .setDepth(10)
 
         // Dancing chicken (reuse earlier looping frames)
         this.chicken = this.add.sprite(500, 340, "chicken", 1)
         this.chicken.setScale(1.2)
+        this.chicken.setDepth(12)
 
         this.anims.create({
             key: "winDance4",
@@ -73,13 +86,14 @@ export default class Level4WinScene extends Phaser.Scene {
             ease: "sine.inOut"
         })
 
-        // Neon positivity orbs (small eggs tinted green)
+        // Positivity orbs (small eggs tinted green)
         this.positivity = []
         for (let i = 0; i < 14; i++) {
             const orb = this.add.image(500, 290, "egg")
             orb.setScale(0.02)
-            orb.setTint(0x00ff88)
+            orb.setTint(0x4ade80)
             orb.setAlpha(0.95)
+            orb.setDepth(11)
             this.positivity.push(orb)
 
             const angle = Phaser.Math.DegToRad(i * (360 / 14))
@@ -108,7 +122,7 @@ export default class Level4WinScene extends Phaser.Scene {
                     500,
                     340,
                     Phaser.Math.Between(2, 4),
-                    0x00ffcc,
+                    0xfbbf24,
                     0.95
                 )
                 const a = Phaser.Math.Between(0, 360)
@@ -127,36 +141,9 @@ export default class Level4WinScene extends Phaser.Scene {
         })
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("Level5Scene")
+            startLevelWithCountdown(this, "Level5Scene")
         })
     }
 
-    drawAtariBackground() {
-        const width = 1000
-        const height = 600
-
-        const grid = this.add.graphics()
-        grid.lineStyle(1, 0x10255a, 0.35)
-
-        for (let x = 0; x <= width; x += 50) {
-            grid.beginPath()
-            grid.moveTo(x, 0)
-            grid.lineTo(x, height)
-            grid.strokePath()
-        }
-
-        for (let y = 0; y <= height; y += 50) {
-            grid.beginPath()
-            grid.moveTo(0, y)
-            grid.lineTo(width, y)
-            grid.strokePath()
-        }
-
-        const scan = this.add.graphics()
-        scan.fillStyle(0x000000, 0.14)
-        for (let y = 0; y < height; y += 4) {
-            scan.fillRect(0, y, width, 1)
-        }
-    }
 }
 

@@ -6,6 +6,9 @@ import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/play
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
 import level6BgmUrl from "../assets/level6-bgm.m4a?url"
 
+/** Must match collision math in `tryScoreAndCollide`. */
+const LEVEL6_HALF_BODY = 48
+
 export default class Level6Scene extends Phaser.Scene {
     constructor() {
         super("Level6Scene")
@@ -32,13 +35,19 @@ export default class Level6Scene extends Phaser.Scene {
             .setDepth(30)
 
         this.add
-            .text(20, 48, "↑ ↓ steer through each ring — ESC — level select", {
-                fontSize: "17px",
-                color: "#2d5580"
-            })
+            .text(
+                20,
+                48,
+                "↑ ↓ Line up with the bright gate; stay between the markers when the ring crosses your column. ESC — level select",
+                {
+                    fontSize: "16px",
+                    color: "#2d5580",
+                    wordWrap: { width: 1000 }
+                }
+            )
             .setDepth(30)
 
-        this.scrollSpeed = 195
+        this.baseScrollSpeed = 195
         this.hoopsCleared = 0
         this.targetHoops = 10
         this.lives = 3
@@ -55,6 +64,9 @@ export default class Level6Scene extends Phaser.Scene {
             })
             .setDepth(30)
         this.updateHud()
+
+        this.scoreGateGfx = this.add.graphics().setDepth(4)
+        this.columnMarkerGfx = this.add.graphics().setDepth(7)
 
         this.player = this.physics.add.sprite(this.scoreLineX, 300, "chicken", 3)
         this.player.setScale(0.78)
@@ -232,10 +244,12 @@ export default class Level6Scene extends Phaser.Scene {
     tryScoreAndCollide(hoop, dt) {
         if (this.isComplete) return
 
+        const scroll =
+            this.hoopsCleared < 3 ? this.baseScrollSpeed * 0.86 : this.baseScrollSpeed
         hoop.prevX = hoop.x
-        hoop.x -= this.scrollSpeed * (dt / 1000)
+        hoop.x -= scroll * (dt / 1000)
         const py = this.player.y
-        const halfBody = 48
+        const halfBody = LEVEL6_HALF_BODY
 
         hoop.label.setX(hoop.x)
 
@@ -273,6 +287,98 @@ export default class Level6Scene extends Phaser.Scene {
                     this.completeLevel()
                 }
             }
+        }
+    }
+
+    pickReferenceHoopForGate() {
+        const line = this.scoreLineX
+        const ahead = this.hoops.filter((h) => h.x > line)
+        if (ahead.length) {
+            return ahead.reduce((a, b) => (a.x < b.x ? a : b))
+        }
+        if (this.hoops.length) {
+            return this.hoops.reduce((a, b) => (a.x > b.x ? a : b))
+        }
+        return null
+    }
+
+    redrawLevel6GateAndMarkers() {
+        const gGate = this.scoreGateGfx
+        const gMark = this.columnMarkerGfx
+        if (!gGate || !gMark) return
+
+        gGate.clear()
+        gMark.clear()
+
+        const ref = this.pickReferenceHoopForGate()
+        const lineX = this.scoreLineX
+        const halfBody = LEVEL6_HALF_BODY
+
+        let anyInColumn = false
+        for (const hoop of this.hoops) {
+            const inColumn = hoop.x > 175 && hoop.x < 298
+            if (inColumn) anyInColumn = true
+        }
+
+        const bandBoost = anyInColumn ? 1.28 : 1
+
+        if (ref) {
+            const safeLow = ref.gapTop + halfBody
+            const safeHigh = ref.gapBottom - halfBody
+            const bandH = Math.max(8, safeHigh - safeLow)
+            const bandTop = safeLow
+
+            const fillA = Math.min(0.34, 0.18 * bandBoost)
+            gGate.fillStyle(0xffffff, fillA * 0.55)
+            gGate.fillRect(lineX - 18, bandTop, 36, bandH)
+
+            gGate.fillStyle(0x5aaef0, fillA)
+            gGate.fillRect(lineX - 12, bandTop, 24, bandH)
+
+            gGate.lineStyle(2, 0xffffff, 0.28 * bandBoost)
+            gGate.strokeRect(lineX - 20, bandTop - 2, 40, bandH + 4)
+
+            gGate.lineStyle(2, 0x2d7ab8, 0.45 * bandBoost)
+            gGate.beginPath()
+            gGate.moveTo(lineX - 22, bandTop)
+            gGate.lineTo(lineX - 22, bandTop + bandH)
+            gGate.moveTo(lineX + 22, bandTop)
+            gGate.lineTo(lineX + 22, bandTop + bandH)
+            gGate.strokePath()
+        }
+
+        const markX0 = lineX - 44
+        const markX1 = lineX + 44
+        for (const hoop of this.hoops) {
+            const inColumn = hoop.x > 175 && hoop.x < 298
+            if (!inColumn) continue
+
+            const safeLow = hoop.gapTop + halfBody
+            const safeHigh = hoop.gapBottom - halfBody
+
+            gMark.lineStyle(3, 0xfff4c4, 0.95)
+            gMark.beginPath()
+            gMark.moveTo(markX0, safeLow)
+            gMark.lineTo(markX1, safeLow)
+            gMark.strokePath()
+
+            gMark.lineStyle(3, 0xffc857, 0.92)
+            gMark.beginPath()
+            gMark.moveTo(markX0, safeHigh)
+            gMark.lineTo(markX1, safeHigh)
+            gMark.strokePath()
+
+            gMark.lineStyle(2, 0xffffff, 0.55)
+            gMark.beginPath()
+            gMark.moveTo(markX0 - 6, safeLow - 4)
+            gMark.lineTo(markX0 - 6, safeLow + 4)
+            gMark.moveTo(markX1 + 6, safeLow - 4)
+            gMark.lineTo(markX1 + 6, safeLow + 4)
+            gMark.moveTo(markX0 - 6, safeHigh - 4)
+            gMark.lineTo(markX0 - 6, safeHigh + 4)
+            gMark.moveTo(markX1 + 6, safeHigh - 4)
+            gMark.lineTo(markX1 + 6, safeHigh + 4)
+            gMark.strokePath()
         }
     }
 
@@ -324,6 +430,8 @@ export default class Level6Scene extends Phaser.Scene {
                 this.hoops.splice(i, 1)
             }
         }
+
+        this.redrawLevel6GateAndMarkers()
 
         const flash = this.time.now < this.invulnerableUntil
         this.player.setAlpha(flash ? 0.5 : 1)

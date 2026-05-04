@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
+import { startLevelWithCountdown } from "../utils/startLevelWithCountdown.js"
 
 export default class Level5WinScene extends Phaser.Scene {
     constructor() {
@@ -16,7 +17,7 @@ export default class Level5WinScene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor("#1a1530")
+        this.cameras.main.setBackgroundColor("#0f1218")
 
         for (let i = 0; i < 14; i++) {
             const x = Phaser.Math.Between(30, 970)
@@ -43,7 +44,9 @@ export default class Level5WinScene extends Phaser.Scene {
         this.add
             .text(500, 160, "MIND CLEAR!", {
                 fontSize: "46px",
-                color: "#c4b5fd"
+                color: "#fef9c3",
+                stroke: "#0f172a",
+                strokeThickness: 6
             })
             .setOrigin(0.5)
             .setDepth(50)
@@ -51,7 +54,9 @@ export default class Level5WinScene extends Phaser.Scene {
         this.add
             .text(500, 240, "Those heavy thoughts didn’t stick.", {
                 fontSize: "26px",
-                color: "#e8e0ff"
+                color: "#e2e8f0",
+                stroke: "#0f172a",
+                strokeThickness: 3
             })
             .setOrigin(0.5)
             .setDepth(50)
@@ -98,13 +103,15 @@ export default class Level5WinScene extends Phaser.Scene {
         this.add
             .text(500, 510, "Press SPACE for Level 6 — Flow of Hope", {
                 fontSize: "22px",
-                color: "#b8a8e0"
+                color: "#cbd5e1",
+                stroke: "#0f172a",
+                strokeThickness: 3
             })
             .setOrigin(0.5)
             .setDepth(150)
 
         this.input.keyboard.once("keydown-SPACE", () => {
-            this.scene.start("Level6Scene")
+            startLevelWithCountdown(this, "Level6Scene")
         })
     }
 }

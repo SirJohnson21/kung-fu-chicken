@@ -3,6 +3,9 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
+import { addLevel4SumoRingGraphics, addLevel4SumoBannerText } from "../utils/level4SumoBackdrop.js"
+import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
+import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
 import level4BgmUrl from "../assets/level4-bgm.m4a?url"
 
 export default class Level4Scene extends Phaser.Scene {
@@ -27,30 +30,48 @@ export default class Level4Scene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor("#040016")
+        this.cameras.main.setBackgroundColor("#2a1810")
 
-        // Atari-ish scanlines + grid
-        this.drawAtariBackground()
+        addLevel4SumoRingGraphics(this)
+        addLevel4SumoBannerText(this, "Dohyō — keep the good vibes in the ring")
 
-        this.add.text(20, 20, "LEVEL 4: POSITIVITY FLOW", {
+        const hudTitle = {
             fontSize: "26px",
-            color: "#00ffcc"
-        })
-
-        this.add.text(20, 52, "Collect positivity (eggs) • Avoid stress • X kick • ESC — level select", {
+            color: "#fef3c7",
+            stroke: "#450a0a",
+            strokeThickness: 5
+        }
+        const hudSub = {
             fontSize: "18px",
-            color: "#7fffd4"
-        })
+            color: "#fde68a",
+            stroke: "#431407",
+            strokeThickness: 3,
+            wordWrap: { width: 780 }
+        }
+        const hudScore = {
+            fontSize: "22px",
+            color: "#fffbeb",
+            stroke: "#451a03",
+            strokeThickness: 4
+        }
 
-        // Ground
-        this.ground = this.add.rectangle(500, 570, 1000, 60, 0x0b3d2e)
+        this.add.text(20, 20, "LEVEL 4: POSITIVITY FLOW", hudTitle).setDepth(30)
+
+        this.add
+            .text(20, 52, "Collect 15 positivity (eggs) • Avoid stress • X kick • ESC — level select", hudSub)
+            .setDepth(30)
+
+        // Ground — clay ring extension (dohyō)
+        this.ground = this.add.rectangle(500, 570, 1000, 60, 0xc9b896)
         this.physics.add.existing(this.ground, true)
+        this.ground.setDepth(1)
 
         // Player
         this.player = this.physics.add.sprite(120, 450, "chicken", 0)
         this.player.setScale(0.85)
         this.player.setCollideWorldBounds(true)
         this.player.setAngle(0)
+        this.player.setDepth(20)
         this.physics.add.collider(this.player, this.ground)
 
         this.cursors = this.input.keyboard.createCursorKeys()
@@ -61,13 +82,6 @@ export default class Level4Scene extends Phaser.Scene {
             key: "run4",
             frames: this.anims.generateFrameNumbers("chicken", { start: 0, end: 2 }),
             frameRate: 8,
-            repeat: -1
-        })
-
-        this.anims.create({
-            key: "flap4",
-            frames: this.anims.generateFrameNumbers("chicken", { start: 3, end: 5 }),
-            frameRate: 14,
             repeat: -1
         })
 
@@ -91,12 +105,11 @@ export default class Level4Scene extends Phaser.Scene {
         this.hasShownKickTip = false
 
         // Positivity stream
-        this.targetPositives = 8
+        this.targetPositives = 15
         this.positiveCount = 0
-        this.positiveText = this.add.text(20, 90, `Positivity: 0 / ${this.targetPositives}`, {
-            fontSize: "22px",
-            color: "#eaffff"
-        })
+        this.positiveText = this.add
+            .text(20, 92, `Positivity: 0 / ${this.targetPositives}`, hudScore)
+            .setDepth(30)
 
         // Groups
         this.positives = this.physics.add.group({
@@ -113,21 +126,23 @@ export default class Level4Scene extends Phaser.Scene {
 
         setupPlayerHealthBar(this, {
             yOffset: -82,
-            bgColor: 0x0b1a40,
-            borderColor: 0x00ffcc,
-            filledColor: 0x00ff88,
-            emptyColor: 0x3d5c6e,
-            labelColor: "#7fffd4"
+            bgColor: 0x450a0a,
+            borderColor: 0xc9a227,
+            filledColor: 0x22c55e,
+            emptyColor: 0x78350f,
+            labelColor: "#fef3c7"
         })
         this.refreshHealthBar()
 
-        this.kickTipBubble = this.add.rectangle(0, 0, 180, 44, 0x0b1a40)
-            .setStrokeStyle(2, 0x00ffcc)
+        this.kickTipBubble = this.add.rectangle(0, 0, 190, 46, 0x7f1d1d, 0.94)
+            .setStrokeStyle(2, 0xc9a227, 1)
             .setVisible(false)
             .setDepth(1100)
         this.kickTipText = this.add.text(0, 0, "Kick it!", {
             fontSize: "20px",
-            color: "#eaffff"
+            color: "#fef3c7",
+            stroke: "#431407",
+            strokeThickness: 3
         })
             .setOrigin(0.5)
             .setVisible(false)
@@ -152,52 +167,14 @@ export default class Level4Scene extends Phaser.Scene {
         registerLevelBgmShutdown(this, "level4Bgm")
     }
 
-    drawAtariBackground() {
-        const width = 1000
-        const height = 600
-
-        // Grid
-        const grid = this.add.graphics()
-        grid.lineStyle(1, 0x10255a, 0.5)
-
-        for (let x = 0; x <= width; x += 50) {
-            grid.beginPath()
-            grid.moveTo(x, 0)
-            grid.lineTo(x, height)
-            grid.strokePath()
-        }
-
-        for (let y = 0; y <= height; y += 50) {
-            grid.beginPath()
-            grid.moveTo(0, y)
-            grid.lineTo(width, y)
-            grid.strokePath()
-        }
-
-        // Scanlines overlay
-        const scan = this.add.graphics()
-        scan.fillStyle(0x000000, 0.12)
-        for (let y = 0; y < height; y += 4) {
-            scan.fillRect(0, y, width, 1)
-        }
-
-        // Subtle flicker
-        this.time.addEvent({
-            delay: 120,
-            callback: () => {
-                grid.setAlpha(Phaser.Math.FloatBetween(0.35, 0.65))
-            },
-            loop: true
-        })
-    }
-
     spawnPositive = () => {
         if (this.isWin || this.isGameOver) return
 
         const y = Phaser.Math.Between(200, 520)
         const orb = this.positives.create(1050, y, "egg")
         orb.setScale(0.06 + Math.random() * 0.01)
-        orb.setTint(0x00ff88)
+        orb.setTint(0x4ade80)
+        orb.setDepth(8)
         orb.body.setAllowGravity(false)
         orb.body.setVelocityX(-Phaser.Math.Between(95, 155))
 
@@ -217,6 +194,7 @@ export default class Level4Scene extends Phaser.Scene {
         const y = Phaser.Math.Between(200, 520)
         const bot = this.stress.create(1050, y, "enemy")
         bot.setScale(0.085)
+        bot.setDepth(8)
         bot.body.setAllowGravity(false)
         bot.body.setVelocityX(-Phaser.Math.Between(120, 180))
 
@@ -240,7 +218,7 @@ export default class Level4Scene extends Phaser.Scene {
             this.sound.play("quoteSound", { volume: 0.35 })
         }
 
-        this.spawnSparkBurst(orb.x, orb.y, 0x00ff99)
+        this.spawnSparkBurst(orb.x, orb.y, 0xfbbf24)
 
         if (this.positiveCount >= this.targetPositives) {
             this.completeLevel()
@@ -262,7 +240,7 @@ export default class Level4Scene extends Phaser.Scene {
         this.lives -= 1
         this.refreshHealthBar()
         this.invulnerableUntil = this.time.now + 900
-        this.cameras.main.flash(160, 255, 40, 80, false)
+        this.cameras.main.flash(160, 255, 210, 120, false)
         if (!this.hasShownKickTip) {
             this.hasShownKickTip = true
             this.showKickTip()
@@ -306,7 +284,6 @@ export default class Level4Scene extends Phaser.Scene {
     }
 
     kickNegativity() {
-        const kickRange = 120
         const kickImpulse = 320
 
         this.stress.getChildren().forEach((bot) => {
@@ -318,7 +295,7 @@ export default class Level4Scene extends Phaser.Scene {
                 bot.x,
                 bot.y
             )
-            if (distance > kickRange) return
+            if (distance > PLAYER_KICK_RANGE_PX) return
 
             const enemyIsLeft = bot.x < this.player.x
             const enemyIsRight = bot.x > this.player.x
@@ -440,8 +417,7 @@ export default class Level4Scene extends Phaser.Scene {
                     this.player.anims.stop()
                     this.player.setFrame(0)
                 } else {
-                    // Keep flap pose while airborne.
-                    this.player.play("flap4", true)
+                    setPlayerAirborneVisual(this.player)
                 }
             })
 
@@ -477,20 +453,15 @@ export default class Level4Scene extends Phaser.Scene {
             }
         }
 
-        // Jump
-        if (this.cursors.up.isDown && onGround) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && onGround) {
             this.player.setVelocityY(-420)
-
-            // Jump immediately into the pose so it looks snappy.
-            this.player.setFrame(3)
-            this.player.play("flap4", true)
             this.player.setAngle(-10)
+            setPlayerAirborneVisual(this.player)
         }
 
-        // Air pose tilt
         if (!onGround) {
-            this.player.play("flap4", true)
             this.player.setAngle(this.player.body.velocity.y < 0 ? -10 : 10)
+            setPlayerAirborneVisual(this.player)
         }
     }
 }
