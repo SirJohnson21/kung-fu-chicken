@@ -5,12 +5,17 @@ import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
 import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level5BgmUrl from "../assets/level5-bgm.m4a?url"
 
 export default class Level5Scene extends Phaser.Scene {
     constructor() {
         super("Level5Scene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -165,6 +170,8 @@ export default class Level5Scene extends Phaser.Scene {
 
         playLevelBgm(this, "level5Bgm")
         registerLevelBgmShutdown(this, "level5Bgm")
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     buildLevel5SubwayBackdrop() {

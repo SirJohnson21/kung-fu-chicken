@@ -3,6 +3,7 @@ import { assetUrl } from "../utils/assetUrl.js"
 import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLevelSelectOnEsc.js"
 import { playLevelBgm, registerLevelBgmShutdown, stopLevelBgm } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 import hoopPassUrl from "../assets/egg-collect.mp3?url"
 import level6BgmUrl from "../assets/level6-bgm.m4a?url"
 
@@ -12,6 +13,10 @@ const LEVEL6_HALF_BODY = 48
 export default class Level6Scene extends Phaser.Scene {
     constructor() {
         super("Level6Scene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -112,6 +117,8 @@ export default class Level6Scene extends Phaser.Scene {
         registerLevelBgmShutdown(this, "level6Bgm")
 
         registerEscToLevelSelect(this)
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     buildHeavenBackdrop() {
@@ -402,6 +409,12 @@ export default class Level6Scene extends Phaser.Scene {
         if (goToLevelSelectIfEsc(this)) return
 
         if (this.isComplete || this.isGameOver) return
+
+        if (this.isCountingDown) {
+            this.player.setVelocity(0, 0)
+            this.redrawLevel6GateAndMarkers()
+            return
+        }
 
         syncPlayerHealthBarPosition(this)
 

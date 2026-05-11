@@ -4,6 +4,7 @@ import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLev
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
 import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 import level5ThoughtUrl from "../assets/level5.png?url"
 import level7FireballUrl from "../assets/level7-fireball.png?url"
 import level7BossMusicUrl from "../assets/level7-boss.mp3?url"
@@ -16,6 +17,10 @@ const BOSS_MUSIC_VOLUME = 0.3
 export default class Level7Scene extends Phaser.Scene {
     constructor() {
         super("Level7Scene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -168,6 +173,8 @@ export default class Level7Scene extends Phaser.Scene {
         })
 
         registerEscToLevelSelect(this)
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     stopBossMusic() {

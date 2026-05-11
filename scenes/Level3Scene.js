@@ -5,11 +5,16 @@ import { registerEscToLevelSelect, goToLevelSelectIfEsc } from "../utils/goToLev
 import { playLevelBgm, registerLevelBgmShutdown } from "../utils/levelBgm.js"
 import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/playerHealthBar.js"
 import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 import level3BgmUrl from "../assets/level3-bgm.m4a?url"
 
 export default class Level3Scene extends Phaser.Scene {
     constructor() {
         super("Level3Scene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -146,6 +151,8 @@ export default class Level3Scene extends Phaser.Scene {
 
         playLevelBgm(this, "level3Bgm")
         registerLevelBgmShutdown(this, "level3Bgm")
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     buildLevel3GymBackdrop() {

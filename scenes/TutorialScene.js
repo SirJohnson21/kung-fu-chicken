@@ -1,10 +1,15 @@
 import Phaser from "phaser"
 import { assetUrl } from "../utils/assetUrl.js"
 import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 
 export default class TutorialScene extends Phaser.Scene {
     constructor() {
         super("TutorialScene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -82,6 +87,8 @@ export default class TutorialScene extends Phaser.Scene {
 
         this.refreshChecklist()
         this._checkSig = "0000"
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     refreshChecklist() {

@@ -6,11 +6,16 @@ import { setupPlayerHealthBar, syncPlayerHealthBarPosition } from "../utils/play
 import { addLevel4SumoRingGraphics, addLevel4SumoBannerText } from "../utils/level4SumoBackdrop.js"
 import { PLAYER_KICK_RANGE_PX } from "../utils/playerKickRange.js"
 import { setPlayerAirborneVisual } from "../utils/playerAirbornePose.js"
+import { runStartCountdown } from "../utils/levelStartCountdown.js"
 import level4BgmUrl from "../assets/level4-bgm.m4a?url"
 
 export default class Level4Scene extends Phaser.Scene {
     constructor() {
         super("Level4Scene")
+    }
+
+    init(data) {
+        this.shouldShowStartCountdown = !!data?.withCountdown
     }
 
     preload() {
@@ -165,6 +170,8 @@ export default class Level4Scene extends Phaser.Scene {
 
         playLevelBgm(this, "level4Bgm")
         registerLevelBgmShutdown(this, "level4Bgm")
+
+        if (this.shouldShowStartCountdown) runStartCountdown(this)
     }
 
     spawnPositive = () => {
